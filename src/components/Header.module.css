@@ -37,14 +37,47 @@
   display: flex;
   gap: 32px;
   font-size: 0.93rem;
-  font-weight: 500;
 }
 .links a {
   color: rgba(255, 255, 255, 0.72);
+  font-weight: 400 !important;
   transition: color 0.2s;
 }
 .links a:hover {
   color: #fff;
+}
+
+/* Groupe actions à droite (Mon espace + CTA) */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Lien "Mon espace" */
+.account {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.9rem;
+  font-weight: 500 !important;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+.account:hover {
+  color: #f0699a;
+}
+.account svg {
+  flex: none;
+}
+
+/* Bouton CTA compact dans le header */
+.headerCta {
+  padding: 10px 20px !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  border-radius: 999px !important;
 }
 
 .burger {
@@ -68,7 +101,7 @@
 }
 .mobileMenu a {
   color: rgba(255, 255, 255, 0.82);
-  font-weight: 500;
+  font-weight: 400 !important;
   font-size: 1rem;
   padding: 12px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
@@ -76,6 +109,20 @@
 .mobileMenu a:last-of-type {
   border-bottom: none;
 }
+
+/* "Mon espace" version mobile */
+.mobileAccount {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #fff !important;
+  font-weight: 500 !important;
+}
+.mobileAccount svg {
+  flex: none;
+  color: #f0699a;
+}
+
 .mobileCta {
   margin-top: 16px;
   justify-content: center;
@@ -83,7 +130,7 @@
 
 @media (max-width: 900px) {
   .links,
-  .headerCta {
+  .actions {
     display: none;
   }
   .burger {

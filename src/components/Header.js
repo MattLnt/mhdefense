@@ -47,9 +47,19 @@ export default function Header() {
           ))}
         </nav>
 
-        <Link href="/reservation" className={`btn btn-rose ${styles.headerCta}`}>
-          Réserver une séance
-        </Link>
+        <div className={styles.actions}>
+          <Link href="/compte" className={styles.account}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+            </svg>
+            <span>Mon espace</span>
+          </Link>
+
+          <Link href="/reservation" className={`btn btn-rose ${styles.headerCta}`}>
+            Réserver une séance
+          </Link>
+        </div>
 
         <button
           className={styles.burger}
@@ -75,6 +85,13 @@ export default function Header() {
             {item.label}
           </Link>
         ))}
+        <Link href="/compte" className={styles.mobileAccount} onClick={() => setOpen(false)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+          </svg>
+          Mon espace
+        </Link>
         <Link
           href="/reservation"
           className={`btn btn-rose ${styles.mobileCta}`}

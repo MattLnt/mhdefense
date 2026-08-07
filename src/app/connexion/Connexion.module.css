@@ -1,135 +1,264 @@
-/* Page de connexion — sobre, centrée, cohérente avec le site. */
+/* Page connexion — fullscreen premium : photo + overlay dégradé MH,
+   carte de connexion en verre dépoli centrée. */
 
 .page {
+  position: relative;
   min-height: 100vh;
-  background: var(--night);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 100px 26px 60px;
-  position: relative;
+  padding: 24px;
   overflow: hidden;
 }
+
+/* Photo de fond (fallback dégradé si l'image manque) */
 .page::before {
   content: "";
   position: absolute;
-  top: -200px;
-  right: -140px;
-  width: 640px;
-  height: 640px;
-  background: radial-gradient(circle, rgba(240, 105, 154, 0.28), transparent 62%);
-  pointer-events: none;
+  inset: 0;
+  background:
+    linear-gradient(150deg, #170a11 0%, #6e2a3b 55%, #d64c7f 100%),
+    url("/images/login-bg.jpg") center / cover no-repeat;
+  background-blend-mode: overlay;
+  z-index: 0;
 }
+
+/* Overlay dégradé MH par-dessus la photo */
 .page::after {
   content: "";
   position: absolute;
-  bottom: -260px;
-  left: -180px;
-  width: 560px;
-  height: 560px;
-  background: radial-gradient(circle, rgba(110, 42, 59, 0.5), transparent 62%);
-  pointer-events: none;
+  inset: 0;
+  background: linear-gradient(
+    150deg,
+    rgba(23, 10, 17, 0.9),
+    rgba(110, 42, 59, 0.8) 55%,
+    rgba(214, 76, 127, 0.72)
+  );
+  z-index: 1;
 }
 
+/* Logo en haut à gauche */
+.brand {
+  position: absolute;
+  top: 30px;
+  left: 36px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.brand img {
+  height: 42px;
+  width: auto;
+}
+
+/* Carte de connexion en verre */
 .card {
   position: relative;
   z-index: 2;
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 24px;
-  padding: 40px 36px;
-  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.35);
+  width: 440px;
+  max-width: 100%;
+  background: rgba(23, 10, 17, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 22px;
+  padding: 44px 42px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
 }
 
 .logo {
-  display: block;
-  height: 40px;
-  width: auto;
-  margin: 0 auto 26px;
+  height: auto;
+  width: 64px;
+  margin-bottom: 22px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #f0699a;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 16px;
 }
 
 .title {
-  font-size: 1.6rem;
-  text-align: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
   margin-bottom: 6px;
 }
 .sub {
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.94rem;
-  margin-bottom: 28px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-bottom: 16px;
-}
-.field label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #574c4b;
-}
-.field input {
-  padding: 13px 15px;
-  border: 1.5px solid var(--line);
-  border-radius: 12px;
-  font-family: inherit;
-  font-size: 0.95rem;
-  color: var(--ink);
-  transition: border-color 0.2s;
-}
-.field input:focus {
-  outline: none;
-  border-color: var(--rose);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.96rem;
+  margin-bottom: 30px;
 }
 
 .error {
-  background: #fdecef;
-  color: #b0234a;
-  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(214, 76, 127, 0.15);
+  border: 1px solid rgba(214, 76, 127, 0.35);
+  color: #f0699a;
+  border-radius: 11px;
   padding: 12px 14px;
   font-size: 0.88rem;
-  margin-bottom: 16px;
-  display: flex;
-  gap: 8px;
+  margin-bottom: 20px;
 }
 .error svg {
   flex: none;
-  margin-top: 1px;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+.field label {
+  display: block;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  margin-bottom: 9px;
+}
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.inputWrap > svg {
+  position: absolute;
+  left: 15px;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+.field input {
+  width: 100%;
+  padding: 14px 15px 14px 44px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.18s;
+}
+.field input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+.field input:focus {
+  outline: none;
+  border-color: #d64c7f;
+}
+
+/* Bouton œil mot de passe */
+.eye {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+}
+.eye:hover {
+  color: #fff;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.labelRow label {
+  margin-bottom: 0;
+}
+.forgot {
+  font-size: 0.78rem;
+  color: #f0699a;
+  font-weight: 600;
+  text-decoration: none;
+}
+.forgot:hover {
+  text-decoration: underline;
+}
+.field.withForgot label {
+  margin-bottom: 9px;
 }
 
 .submit {
   width: 100%;
   padding: 15px;
   border: none;
-  border-radius: 999px;
-  background: var(--rose);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #d64c7f, #f0699a);
   color: #fff;
   font-family: inherit;
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s;
-  margin-top: 6px;
+  margin-top: 8px;
+  box-shadow: 0 12px 30px rgba(214, 76, 127, 0.35);
+  transition: transform 0.15s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 .submit:hover:not(:disabled) {
-  background: var(--rose-2);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px rgba(214, 76, 127, 0.45);
 }
 .submit:disabled {
-  opacity: 0.55;
+  opacity: 0.6;
   cursor: not-allowed;
+}
+
+.sep {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 26px 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+}
+.sep::before,
+.sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .foot {
   text-align: center;
-  margin-top: 22px;
-  font-size: 0.9rem;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.92rem;
 }
 .foot a {
-  color: var(--rose);
-  font-weight: 600;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.foot a:hover {
+  color: #f0699a;
+}
+
+@media (max-width: 520px) {
+  .card {
+    padding: 34px 26px;
+  }
+  .brand {
+    top: 22px;
+    left: 22px;
+  }
+  .title {
+    font-size: 1.7rem;
+  }
 }
