@@ -1,0 +1,92 @@
+/* Section "Pour qui ?" — texte + liste à gauche, photo d'action à droite. */
+
+.section {
+  padding: 104px 0;
+  background: var(--paper);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+/* --- Colonne texte --- */
+.eyebrow {
+  color: var(--rose);
+  display: block;
+  margin-bottom: 16px;
+}
+.title {
+  font-size: clamp(2rem, 3.6vw, 2.9rem);
+  max-width: 15ch;
+  margin-bottom: 20px;
+}
+.intro {
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 46ch;
+  margin-bottom: 34px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+.item {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+}
+.item:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(150deg, var(--rose-2), var(--rose));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-shadow: 0 8px 20px rgba(214, 76, 127, 0.28);
+}
+.item h3 {
+  font-size: 1.12rem;
+  margin-bottom: 3px;
+}
+.item p {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* --- Colonne image --- */
+.media {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--r-card);
+  overflow: hidden;
+  box-shadow: 0 30px 70px rgba(110, 42, 59, 0.16);
+}
+.media img {
+  object-fit: cover;
+}
+
+@media (max-width: 900px) {
+  .section {
+    padding: 72px 0;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .media {
+    order: -1;
+    max-width: 440px;
+  }
+}

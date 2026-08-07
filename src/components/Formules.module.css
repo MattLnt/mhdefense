@@ -1,0 +1,269 @@
+/* Section Formules — vedette (individuelle) + carte groupe, 50/50. */
+
+.section {
+  padding: 100px 0;
+  background: #fff;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 40px;
+  margin-bottom: 46px;
+}
+.head .eyebrow {
+  color: var(--rose);
+  display: block;
+  margin-bottom: 14px;
+}
+.head h2 {
+  font-size: clamp(2.1rem, 4vw, 3rem);
+  max-width: 16ch;
+}
+.head .intro {
+  color: var(--muted);
+  font-size: 1.02rem;
+  max-width: 34ch;
+  padding-bottom: 4px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: stretch;
+}
+
+/* --- Carte vedette (individuelle) --- */
+.hero {
+  border-radius: 28px;
+  padding: 46px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  min-height: 470px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: transform 0.25s;
+  background: linear-gradient(135deg, #E8447A 0%, #8E2150 45%, #2A0E1A 100%);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  top: -100px;
+  right: -80px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.4), transparent 62%);
+  transition: 0.3s;
+  pointer-events: none;
+}
+.hero:hover {
+  transform: translateY(-4px);
+}
+.hero:hover::before {
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.58), transparent 62%);
+}
+.hero .ico {
+  position: absolute;
+  top: 46px;
+  left: 46px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.hero .body {
+  position: relative;
+  z-index: 2;
+}
+.hero .badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  padding: 7px 15px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.hero h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.hero .desc {
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 34ch;
+  margin-bottom: 26px;
+  font-size: 1.02rem;
+}
+.hero .foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.hero .price {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.hero .price span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.82;
+}
+.hero .cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  padding: 14px 26px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+.hero .cta:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* --- Carte groupe (duo + petit groupe fusionnés) --- */
+.group {
+  border-radius: 28px;
+  padding: 46px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  min-height: 470px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: transform 0.25s;
+  background: linear-gradient(215deg, #D6407A 0%, #7A1D46 50%, #1F0A13 100%);
+}
+.group::after {
+  content: "";
+  position: absolute;
+  top: -100px;
+  right: -80px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.32), transparent 62%);
+  transition: 0.3s;
+  pointer-events: none;
+}
+.group:hover {
+  transform: translateY(-4px);
+}
+.group:hover::after {
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.5), transparent 62%);
+}
+.group .ico {
+  position: absolute;
+  top: 46px;
+  left: 46px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.group .body {
+  position: relative;
+  z-index: 2;
+}
+.group .badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  padding: 7px 15px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.group h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.group .desc {
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 34ch;
+  margin-bottom: 26px;
+  font-size: 1.02rem;
+}
+.group .foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.group .price {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.group .price span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.82;
+}
+.group .go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  padding: 14px 26px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+.group .go:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 860px) {
+  .section {
+    padding: 72px 0;
+  }
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .hero,
+  .group {
+    min-height: 0;
+    padding: 40px;
+  }
+  .hero .ico,
+  .group .ico {
+    display: none;
+  }
+}

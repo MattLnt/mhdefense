@@ -1,0 +1,321 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ========================================================
+//  ENUMS
+// ========================================================
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+enum BookingType {
+  PONCTUEL
+  ABONNEMENT
+}
+
+enum SessionType {
+  INDIVIDUEL
+  DUO
+  GROUPE
+}
+
+enum BookingStatus {
+  HELD        // créneau tenu, en attente de paiement (voir expiresAt)
+  CONFIRMED   // payé (comptant/acompte) ou couvert par un abonnement
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum PaymentMode {
+  COMPTANT    // 100% réglé en ligne
+  ACOMPTE     // 50% en ligne, solde réglé sur place
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID        // intégralité réglée
+  PARTIAL     // acompte réglé, solde dû sur place
+  REFUNDED
+  FAILED
+}
+
+enum PlanKey {
+  SILVER      // engagement 1 mois
+  GOLD        // engagement 3 mois
+  PLATINUM    // engagement 6 mois
+}
+
+enum Frequency {
+  ONCE        // 1x / semaine
+  TWICE       // 2x / semaine
+}
+
+enum SubStatus {
+  ACTIVE
+  CANCELLED   // résiliation programmée en fin d'engagement (cancelAt)
+  PAST_DUE
+  ENDED
+}
+
+enum DiscountType {
+  PERCENT   // pourcentage : discountValue = 10 → -10 %
+  FIXED     // montant fixe en centimes : discountValue = 1000 → -10 €
+}
+
+enum PromoScope {
+  PONCTUEL      // valable uniquement sur les séances ponctuelles
+  ABONNEMENT    // valable uniquement sur les abonnements
+  ALL           // valable sur les deux parcours
+}
+
+// ========================================================
+//  AUTH / USERS
+//  NextAuth stratégie JWT (credentials) → pas de tables
+//  Account/Session en base.
+// ========================================================
+
+model User {
+  id               String        @id @default(cuid())
+  email            String        @unique
+  name             String?
+  phone            String?
+  passwordHash     String?
+  role             Role          @default(CLIENT)
+  stripeCustomerId String?       @unique
+
+  bookings         Booking[]
+  subscription     Subscription?
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+// ========================================================
+//  DISPONIBILITÉS
+// ========================================================
+
+// Règles récurrentes éditées par l'admin (séances d'1h).
+model Availability {
+  id        String   @id @default(cuid())
+  dayOfWeek Int      // 0 = dimanche ... 6 = samedi
+  startTime String   // "07:00"
+  endTime   String   // "21:00"
+  active    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dayOfWeek])
+}
+
+// Indisponibilités ponctuelles (vacances, perso, plage bloquée).
+model Block {
+  id        String   @id @default(cuid())
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String?
+
+  createdAt DateTime @default(now())
+
+  @@index([startsAt])
+}
+
+// ========================================================
+//  RÉSERVATIONS
+// ========================================================
+
+model Booking {
+  id                String         @id @default(cuid())
+  startsAt          DateTime
+  durationMin       Int            @default(60)
+
+  type              BookingType
+  sessionType       SessionType    @default(INDIVIDUEL)
+  status            BookingStatus  @default(HELD)
+  participantsCount Int            @default(1)
+  isFreeTrial       Boolean        @default(false) // séance d'essai gratuite (0 €, sans Stripe)
+
+  // Client connecté (abo ou ponctuel loggé) OU guest (ponctuel)
+  userId            String?
+  user              User?          @relation(fields: [userId], references: [id])
+  guestName         String?
+  guestEmail        String?
+  guestPhone        String?
+
+  // Renseigné si la résa consomme un quota d'abonnement
+  subscriptionId    String?
+  subscription      Subscription?  @relation(fields: [subscriptionId], references: [id])
+
+  // Expiration du HELD (checkout non terminé) → libéré par cron/filtrage
+  expiresAt         DateTime?
+
+  notes             String?
+
+  participants      Participant[]
+  payment           Payment?
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([startsAt])
+  @@index([status])
+  @@index([userId])
+  // ⚠️ L'unicité réelle du créneau (un seul HELD/CONFIRMED/COMPLETED
+  //    par startsAt) se fait via un index UNIQUE PARTIEL ajouté en SQL
+  //    brut dans une migration séparée — impossible en Prisma pur.
+}
+
+// Accompagnants pour duo / petit groupe (renseignements participants).
+model Participant {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  name      String
+  phone     String?
+  email     String?
+  age       Int?     // utile pour enfants / ados
+
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+}
+
+// ========================================================
+//  PAIEMENTS (parcours ponctuel)
+// ========================================================
+
+model Payment {
+  id                    String        @id @default(cuid())
+  bookingId             String        @unique
+  booking               Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  mode                  PaymentMode
+  status                PaymentStatus @default(PENDING)
+
+  totalAmount           Int           // prix total, en centimes
+  amountPaidOnline      Int           @default(0) // comptant = total ; acompte = 50%
+  amountDueOnSite       Int           @default(0) // solde à régler sur place
+  onSitePaid            Boolean       @default(false) // coché par l'admin
+  currency              String        @default("eur")
+
+  stripeSessionId       String?       @unique
+  stripePaymentIntentId String?       @unique
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+// ========================================================
+//  ABONNEMENTS
+// ========================================================
+
+// Catalogue tarifaire (grilles images 1 & 3).
+// Un Plan = clé (Silver/Gold/Platinum) × type de séance × fréquence.
+model Plan {
+  id               String        @id @default(cuid())
+  key              PlanKey
+  sessionType      SessionType
+  frequency        Frequency
+  engagementMonths Int           // 1 / 3 / 6
+  price            Int           // mensuel par personne, en centimes
+  stripePriceId    String?       @unique
+  active           Boolean       @default(true)
+
+  subscriptions    Subscription[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@unique([key, sessionType, frequency])
+}
+
+model Subscription {
+  id                String      @id @default(cuid())
+  userId            String      @unique
+  user              User        @relation(fields: [userId], references: [id])
+
+  planId            String
+  plan              Plan        @relation(fields: [planId], references: [id])
+
+  sessionType       SessionType
+  frequency         Frequency
+  weeklyQuota       Int         // ONCE = 1 ; TWICE = 2
+  participantsCount Int         @default(1) // duo/groupe : 1 payeur, total = price × n
+
+  status            SubStatus   @default(ACTIVE)
+  engagementEndsAt  DateTime    // fin d'engagement (1/3/6 mois)
+  cancelAt          DateTime?   // résiliation programmée = engagementEndsAt
+  currentPeriodEnd  DateTime?
+
+  stripeSubId       String?     @unique
+  stripeCustomerId  String?
+
+  bookings          Booking[]
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([status])
+}
+
+// ========================================================
+//  CODES PROMO
+// ========================================================
+
+model PromoCode {
+  id             String       @id @default(cuid())
+  code           String       @unique // stocké en MAJUSCULES (ex : "RENTREE25")
+  discountType   DiscountType
+  discountValue  Int          // PERCENT : 1-100 ; FIXED : centimes
+  scope          PromoScope   @default(ALL)
+
+  active         Boolean      @default(true)
+  startsAt       DateTime?    // début de validité (null = actif tout de suite)
+  endsAt         DateTime?    // fin de validité (null = sans limite)
+
+  maxRedemptions Int?         // nombre max d'utilisations (null = illimité)
+  timesRedeemed  Int          @default(0)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([active])
+}
+
+// ========================================================
+//  SYNC CALENDRIER (flux ICS abonnable iPhone / Google)
+// ========================================================
+
+model CalendarToken {
+  id        String   @id @default(cuid())
+  token     String   @unique @default(cuid())
+  label     String?
+  createdAt DateTime @default(now())
+}
+
+// ========================================================
+//  RÉGLAGES ÉDITABLES (config admin, clé/valeur)
+// ========================================================
+
+// Stocke les valeurs paramétrables par l'admin sous forme clé/valeur.
+// Les prix sont en centimes (comme partout ailleurs), stockés en texte.
+// Clés posées par le seed :
+//   price_ponctuel_individuel = "6000"   (60 €)
+//   price_ponctuel_duo        = "4500"   (45 € / personne)
+//   price_ponctuel_groupe     = "4500"   (45 € / personne)
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
