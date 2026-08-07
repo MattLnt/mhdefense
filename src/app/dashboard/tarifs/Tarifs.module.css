@@ -1,0 +1,223 @@
+/* Tarifs admin — édition prix ponctuels + abonnements (Dark Glass). */
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.saveBtn {
+  padding: 11px 22px;
+  border: none;
+  border-radius: 999px;
+  background: #d64c7f;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.saveBtn:hover:not(:disabled) {
+  background: #f0699a;
+}
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.message {
+  margin-bottom: 18px;
+  padding: 12px 15px;
+  border-radius: 12px;
+  font-size: 0.87rem;
+  display: flex;
+  gap: 9px;
+}
+.message svg {
+  flex: none;
+  margin-top: 1px;
+}
+.success {
+  background: rgba(46, 125, 91, 0.14);
+  border: 1px solid rgba(46, 125, 91, 0.3);
+  color: #4caf83;
+}
+.error {
+  background: rgba(214, 76, 127, 0.12);
+  border: 1px solid rgba(214, 76, 127, 0.3);
+  color: #f0699a;
+}
+
+.panel {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 18px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.panelTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.panelSub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+/* Prix ponctuels */
+.ponctuelGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.priceCard {
+  background: var(--rd);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 16px;
+}
+.priceCard label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 10px;
+}
+.inputEuro {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.inputEuro input {
+  width: 100%;
+  padding: 11px 32px 11px 13px;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  background: var(--bg);
+  color: var(--txt);
+}
+.inputEuro input:focus {
+  outline: none;
+  border-color: #d64c7f;
+}
+.inputEuro .euro {
+  position: absolute;
+  right: 13px;
+  color: var(--muted);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Grille abonnements */
+.aboSection {
+  margin-bottom: 24px;
+}
+.aboSection:last-child {
+  margin-bottom: 0;
+}
+.aboSectionTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.aboSectionTitle svg {
+  color: #f0699a;
+}
+
+.aboTable {
+  overflow-x: auto;
+}
+.aboGrid {
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr;
+  gap: 10px;
+  min-width: 380px;
+}
+.aboHeader {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 6px 4px;
+  text-align: center;
+}
+.aboHeaderLeft {
+  text-align: left;
+}
+.aboRowLabel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 4px;
+}
+.aboRowLabel span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+.aboCell {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.aboCell input {
+  width: 100%;
+  padding: 10px 28px 10px 12px;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: var(--rd);
+  color: var(--txt);
+  text-align: center;
+}
+.aboCell input:focus {
+  outline: none;
+  border-color: #d64c7f;
+}
+.aboCell .euro {
+  position: absolute;
+  right: 10px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  pointer-events: none;
+}
+
+.loading {
+  color: var(--muted);
+  padding: 40px 0;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .ponctuelGrid {
+    grid-template-columns: 1fr;
+  }
+}
