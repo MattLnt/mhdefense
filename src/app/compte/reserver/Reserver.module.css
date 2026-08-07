@@ -1,0 +1,280 @@
+/* Réserver ma séance — layout 3 colonnes premium (Dark Glass). */
+
+.head {
+  margin-bottom: 20px;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* Bandeau quota (fin, une ligne) */
+.quotaBar {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.quotaIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(150deg, #f0699a, #d64c7f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex: none;
+}
+.quotaText b {
+  font-size: 0.88rem;
+}
+.quotaText span {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.quotaCount {
+  margin-left: auto;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+.quotaCount small {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+/* Layout 3 colonnes */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr 260px;
+  gap: 16px;
+  align-items: start;
+}
+
+.card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 20px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.cardTitle {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+/* Colonne créneaux */
+.slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  align-content: start;
+}
+.slot {
+  padding: 12px 4px;
+  border-radius: 10px;
+  background: var(--rd);
+  border: 1px solid var(--glass-border);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  color: var(--txt);
+  font-family: inherit;
+}
+.slot:hover {
+  border-color: #d64c7f;
+}
+.slotSel {
+  background: #d64c7f;
+  border-color: #d64c7f;
+  color: #fff;
+}
+.slotsHint {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 40px 10px;
+}
+
+/* Encadré récap premium */
+.recap {
+  background: linear-gradient(160deg, rgba(214, 76, 127, 0.18), rgba(110, 42, 59, 0.12));
+  border: 1px solid rgba(240, 105, 154, 0.28);
+  display: flex;
+  flex-direction: column;
+  min-height: 340px;
+}
+.recap .cardTitle {
+  color: #f0699a;
+}
+.recapBig {
+  text-align: center;
+  padding: 14px 0 18px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 16px;
+}
+.recapDay {
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.recapMonth {
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.recapTime {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  background: #d64c7f;
+  color: #fff;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.recapRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.86rem;
+  padding: 7px 0;
+}
+.recapRow span:first-child {
+  color: var(--muted);
+}
+.recapRow span:last-child {
+  font-weight: 600;
+}
+.recapIncluse {
+  color: #f0699a;
+}
+.recapEmpty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--muted);
+  padding: 30px 10px;
+}
+.recapEmpty svg {
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+.recapEmpty p {
+  font-size: 0.85rem;
+}
+
+.confirm {
+  margin-top: auto;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 999px;
+  background: #d64c7f;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.94rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+.confirm:hover:not(:disabled) {
+  background: #f0699a;
+}
+.confirm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 16px;
+  padding: 13px 15px;
+  background: rgba(214, 76, 127, 0.12);
+  border: 1px solid rgba(214, 76, 127, 0.3);
+  color: #f0699a;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  display: flex;
+  gap: 9px;
+}
+.error svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* États pleine largeur (pas d'abo / quota atteint) */
+.done {
+  text-align: center;
+  padding: 30px 20px;
+}
+.doneIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(46, 125, 91, 0.15);
+  border: 1px solid rgba(46, 125, 91, 0.3);
+  color: #4caf83;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+.done h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.done p {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.loading {
+  color: var(--muted);
+  padding: 40px 0;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .slots {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .recap {
+    min-height: 0;
+  }
+}
