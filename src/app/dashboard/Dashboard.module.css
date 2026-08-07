@@ -1,5 +1,6 @@
-/* Dashboard admin — layout Dark Glass (identique à l'espace membre).
-   Desktop : sidebar rétractable. Mobile : bottom bar fixe. */
+/* Dashboard admin — layout Dark Glass.
+   Desktop : sidebar rétractable (burger en haut, à côté du logo).
+   Mobile : bottom bar fixe. */
 
 .shell {
   --bg: #170a11;
@@ -12,6 +13,7 @@
   --rd: rgba(255, 255, 255, 0.08);
   --halo: rgba(214, 76, 127, 0.24);
   --bar-bg: rgba(23, 10, 17, 0.92);
+  --active-bg: rgba(214, 76, 127, 0.16);
 
   display: grid;
   grid-template-columns: 250px 1fr;
@@ -20,7 +22,7 @@
   color: var(--txt);
   position: relative;
   overflow-x: hidden;
-  transition: grid-template-columns 0.32s ease, background 0.35s ease, color 0.35s ease;
+  transition: grid-template-columns 0.3s ease, background 0.35s ease, color 0.35s ease;
 }
 .shell[data-theme="light"] {
   --bg: #fbf9f8;
@@ -33,9 +35,10 @@
   --rd: #f4eee9;
   --halo: rgba(214, 76, 127, 0.14);
   --bar-bg: rgba(255, 255, 255, 0.95);
+  --active-bg: rgba(214, 76, 127, 0.12);
 }
 .shell.collapsed {
-  grid-template-columns: 76px 1fr;
+  grid-template-columns: 82px 1fr;
 }
 .shell::before {
   content: "";
@@ -51,17 +54,21 @@
 /* ---------- Sidebar ---------- */
 .side {
   border-right: 1px solid var(--side-border);
-  padding: 22px 14px;
+  padding: 20px 14px;
   display: flex;
   flex-direction: column;
   position: relative;
   z-index: 2;
 }
+.collapsed .side {
+  padding: 20px 10px;
+}
 .topSide {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px 20px;
+  gap: 8px;
+  padding: 0 6px 22px;
 }
 .brand {
   display: flex;
@@ -96,23 +103,39 @@
   font-weight: 500;
   letter-spacing: 0.06em;
 }
-.collapsed .brandName {
-  opacity: 0;
-  width: 0;
-}
-.collapsed .topSide {
-  justify-content: center;
-}
 .burger {
   cursor: pointer;
   color: var(--muted);
   flex: none;
   background: none;
   border: none;
-  padding: 4px;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s, background 0.18s;
 }
-.collapsed .burger {
-  display: none;
+.burger:hover {
+  color: var(--txt);
+  background: var(--nav-hover);
+}
+
+/* En mode rétracté : le logo se cache, le burger se centre */
+.collapsed .brandName {
+  opacity: 0;
+  width: 0;
+}
+.collapsed .topSide {
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 0 0 22px;
+}
+.collapsed .brand {
+  justify-content: center;
+  gap: 0;
+  width: 100%;
 }
 
 .navSection {
@@ -124,23 +147,24 @@
   padding: 14px 12px 6px;
   white-space: nowrap;
   overflow: hidden;
+  transition: opacity 0.2s;
 }
 .collapsed .navSection {
   opacity: 0;
-  height: 10px;
+  height: 12px;
   padding: 0;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 .navLink {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 11px 12px;
   border-radius: 11px;
   color: var(--muted);
   font-size: 0.89rem;
@@ -148,7 +172,7 @@
   white-space: nowrap;
   overflow: hidden;
   cursor: pointer;
-  border: 1px solid transparent;
+  border: none;
   background: none;
   width: 100%;
   text-align: left;
@@ -160,23 +184,34 @@
 }
 .navLink:hover {
   color: var(--txt);
+  background: var(--nav-hover);
 }
 .navLink.on {
-  background: var(--nav-hover);
-  color: var(--txt);
-  border-color: var(--glass-border);
+  background: var(--active-bg);
+  color: #f0699a;
+  font-weight: 600;
 }
-.collapsed .navLabel {
-  opacity: 0;
-  width: 0;
+.navLabel {
+  transition: opacity 0.2s;
 }
+
+/* État rétracté : liens centrés, carrés, icône au milieu */
 .collapsed .navLink {
   justify-content: center;
-  padding: 10px;
+  gap: 0;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto;
+  border-radius: 12px;
+}
+.collapsed .navLabel {
+  display: none;
 }
 
 .foot {
   margin-top: auto;
+  padding-top: 16px;
 }
 .userBox {
   display: flex;
@@ -216,13 +251,6 @@
   font-size: 0.72rem;
   color: var(--muted);
 }
-.collapsed .userInfo {
-  opacity: 0;
-  width: 0;
-}
-.collapsed .userBox {
-  justify-content: center;
-}
 .logoutBtn {
   background: none;
   border: none;
@@ -230,9 +258,26 @@
   cursor: pointer;
   padding: 2px;
   flex: none;
+  transition: color 0.18s;
 }
+.logoutBtn:hover {
+  color: #f0699a;
+}
+
+/* État rétracté : avatar seul, centré, propre */
+.collapsed .userBox {
+  padding: 0;
+  background: none;
+  border: none;
+  justify-content: center;
+}
+.collapsed .userInfo,
 .collapsed .logoutBtn {
   display: none;
+}
+.collapsed .avatar {
+  width: 40px;
+  height: 40px;
 }
 
 /* ---------- Zone principale ---------- */

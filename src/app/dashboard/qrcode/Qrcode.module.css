@@ -1,0 +1,248 @@
+/* Générateur QR code admin (Dark Glass). */
+
+.head {
+  margin-bottom: 22px;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.panel {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 24px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.panelTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.panelSub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+.field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.field input[type="text"],
+.field input[type="url"] {
+  padding: 11px 13px;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  background: var(--rd);
+  color: var(--txt);
+}
+.field input:focus {
+  outline: none;
+  border-color: #d64c7f;
+}
+
+/* Raccourcis de destination */
+.presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.preset {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--glass-border);
+  background: var(--rd);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.preset.on {
+  border-color: #d64c7f;
+  background: rgba(214, 76, 127, 0.15);
+  color: var(--txt);
+}
+
+/* Sélecteur de couleur */
+.colorRow {
+  display: flex;
+  gap: 12px;
+}
+.colorField {
+  flex: 1;
+}
+.swatches {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.swatch.on {
+  border-color: var(--txt);
+}
+.colorInputRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.colorInputRow input[type="color"] {
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 9px;
+  background: none;
+  cursor: pointer;
+  padding: 2px;
+}
+.colorInputRow input[type="text"] {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 9px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  background: var(--rd);
+  color: var(--txt);
+}
+
+/* Segments (style de modules) */
+.segRow {
+  display: flex;
+  gap: 6px;
+}
+.seg {
+  flex: 1;
+  padding: 9px;
+  border-radius: 9px;
+  border: 1.5px solid var(--glass-border);
+  background: var(--rd);
+  color: var(--txt);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.seg.on {
+  border-color: #d64c7f;
+  background: rgba(214, 76, 127, 0.15);
+}
+
+/* Toggle logo */
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.checkRow input {
+  width: 18px;
+  height: 18px;
+  accent-color: #d64c7f;
+}
+
+/* Aperçu */
+.previewPanel {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 24px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  position: sticky;
+  top: 20px;
+}
+.previewBox {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  min-height: 300px;
+}
+.previewBox canvas,
+.previewBox svg {
+  max-width: 100%;
+  height: auto !important;
+  border-radius: 8px;
+}
+
+.exportRow {
+  display: flex;
+  gap: 10px;
+}
+.exportBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 999px;
+  border: none;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.exportPng {
+  background: #d64c7f;
+  color: #fff;
+}
+.exportPng:hover {
+  background: #f0699a;
+}
+.exportSvg {
+  background: var(--rd);
+  border: 1.5px solid var(--glass-border);
+  color: var(--txt);
+}
+.exportSvg:hover {
+  border-color: #d64c7f;
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .previewPanel {
+    position: static;
+  }
+}

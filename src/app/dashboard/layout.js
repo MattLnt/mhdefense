@@ -57,7 +57,6 @@ const NAV = [
   { href: "/dashboard/qrcode", label: "QR Code", short: "QR", Icon: IconQr },
 ];
 
-// Liens plats (pour la bottom bar mobile)
 const FLAT = NAV.filter((n) => n.href);
 
 export default function DashboardLayout({ children }) {
@@ -110,7 +109,11 @@ export default function DashboardLayout({ children }) {
               <small>Administration</small>
             </div>
           </div>
-          <button className={styles.burger} onClick={toggleCollapsed} aria-label="Réduire le menu">
+          <button
+            className={styles.burger}
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? "Déployer le menu" : "Réduire le menu"}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
               <path d="M3 6h18M3 12h18M3 18h18" />
             </svg>
@@ -126,6 +129,7 @@ export default function DashboardLayout({ children }) {
                 key={item.href}
                 className={`${styles.navLink} ${isActive(item.href) ? styles.on : ""}`}
                 onClick={() => router.push(item.href)}
+                title={collapsed ? item.label : undefined}
               >
                 <item.Icon />
                 <span className={styles.navLabel}>{item.label}</span>
