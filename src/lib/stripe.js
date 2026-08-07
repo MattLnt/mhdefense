@@ -1,24 +1,36 @@
 import Stripe from "stripe";
 
-// Client Stripe côté serveur (jamais importé côté client).
+// Instance Stripe créée à la demande (lazy), jamais au moment du build.
 //
-// On ne fixe PAS "apiVersion" volontairement : les versions récentes du
-// SDK stripe-node épinglent déjà leur propre version d'API à la release.
-// Hardcoder une date la ferait périmer et créerait des désaccords types.
-//
-// La clé est lue à l'appel, pas au build : si STRIPE_SECRET_KEY manque
-// pendant un build (ex. page statique), on ne veut pas planter le build
-// entier — l'erreur ne doit tomber qu'à l'usage réel.
+// Next.js « collecte » les routes au build : si on instanciait Stripe au
+// niveau module, l'absence de clé pendant cette phase ferait planter le
+// build entier. On diffère donc la création au premier appel réel.
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  // Avertissement non bloquant : utile en dev si le .env n'est pas rempli.
-  console.warn(
-    "[stripe] STRIPE_SECRET_KEY manquant — les appels Stripe échoueront."
-  );
+let _stripe = null;
+
+function getStripe() {
+  if (_stripe) return _stripe;
+
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error("STRIPE_SECRET_KEY manquant.");
+  }
+
+  _stripe = new Stripe(key, {
+    appInfo: { name: "MH Defense" },
+  });
+  return _stripe;
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  appInfo: {
-    name: "MH Defense",
-  },
-});
+// Proxy : `stripe.paymentIntents.create(...)` fonctionne comme avant,
+// mais l'instance n'est réellement créée qu'à ce moment-là.
+export const stripe = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const client = getStripe();
+      const value = client[prop];
+      return typeof value === "function" ? value.bind(client) : value;
+    },
+  }
+);
