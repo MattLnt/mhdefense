@@ -4,7 +4,6 @@ import { stripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
-// Stripe a besoin du corps brut (non parsé) pour vérifier la signature.
 export async function POST(request) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -23,10 +22,10 @@ export async function POST(request) {
 
   try {
     switch (event.type) {
-      // Paiement ponctuel validé
-      case "checkout.session.completed": {
-        const session = event.data.object;
-        const bookingId = session.metadata?.bookingId;
+      // Paiement carte validé
+      case "payment_intent.succeeded": {
+        const intent = event.data.object;
+        const bookingId = intent.metadata?.bookingId;
         if (!bookingId) break;
 
         const payment = await prisma.payment.findUnique({
@@ -34,10 +33,9 @@ export async function POST(request) {
         });
         if (!payment) break;
 
-        // Comptant → payé intégralement ; acompte → partiel (solde sur place)
+        // Comptant → payé ; acompte → partiel (solde sur place)
         const newStatus = payment.mode === "ACOMPTE" ? "PARTIAL" : "PAID";
 
-        // On confirme la réservation + on marque le paiement, en une transaction
         await prisma.$transaction([
           prisma.booking.update({
             where: { id: bookingId },
@@ -47,23 +45,22 @@ export async function POST(request) {
             where: { bookingId },
             data: {
               status: newStatus,
-              stripePaymentIntentId: session.payment_intent ?? null,
+              stripePaymentIntentId: intent.id,
             },
           }),
         ]);
         break;
       }
 
-      // Session expirée sans paiement → on libère le créneau
-      case "checkout.session.expired": {
-        const session = event.data.object;
-        const bookingId = session.metadata?.bookingId;
+      // Paiement échoué → on libère le créneau
+      case "payment_intent.payment_failed": {
+        const intent = event.data.object;
+        const bookingId = intent.metadata?.bookingId;
         if (!bookingId) break;
 
         const booking = await prisma.booking.findUnique({
           where: { id: bookingId },
         });
-        // On n'annule que si toujours en attente (pas déjà confirmée)
         if (booking && booking.status === "HELD") {
           await prisma.$transaction([
             prisma.booking.update({
@@ -80,7 +77,6 @@ export async function POST(request) {
       }
 
       default:
-        // Les autres événements (abonnements, etc.) seront gérés plus tard
         break;
     }
 
