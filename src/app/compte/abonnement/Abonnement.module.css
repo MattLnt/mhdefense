@@ -1,0 +1,252 @@
+/* Mon abonnement — détail + résiliation (Dark Glass). */
+
+.head {
+  margin-bottom: 22px;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* Carte principale abonnement (vedette) */
+.main {
+  background: linear-gradient(160deg, rgba(214, 76, 127, 0.18), rgba(110, 42, 59, 0.12));
+  border: 1px solid rgba(240, 105, 154, 0.28);
+  border-radius: 20px;
+  padding: 26px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.planRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.planName {
+  font-size: 1.9rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.planTag {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #f0699a;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  padding: 4px 11px;
+  border-radius: 999px;
+  margin-top: 10px;
+}
+.price {
+  text-align: right;
+}
+.priceValue {
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.priceValue small {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.metaRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.metaRow span:first-child {
+  color: var(--muted);
+}
+.metaRow span:last-child {
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 11px;
+  border-radius: 999px;
+}
+.badgeActive {
+  color: #4caf83;
+  background: rgba(46, 125, 91, 0.15);
+}
+.badgeCancelled {
+  color: #c9a24a;
+  background: rgba(201, 162, 74, 0.14);
+}
+.badgePastDue {
+  color: #d98a9a;
+  background: rgba(176, 35, 74, 0.14);
+}
+
+/* Colonne latérale : actions */
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 22px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.card p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.btnOutline {
+  width: 100%;
+  padding: 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--glass-border);
+  background: none;
+  color: var(--txt);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.18s;
+}
+.btnOutline:hover {
+  border-color: #d64c7f;
+}
+.btnDanger {
+  width: 100%;
+  padding: 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(176, 35, 74, 0.3);
+  background: none;
+  color: #d98a9a;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+.btnDanger:hover:not(:disabled) {
+  background: rgba(176, 35, 74, 0.1);
+  border-color: rgba(176, 35, 74, 0.5);
+}
+.btnDanger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Bandeau info résiliation programmée */
+.notice {
+  display: flex;
+  gap: 10px;
+  background: rgba(201, 162, 74, 0.1);
+  border: 1px solid rgba(201, 162, 74, 0.3);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  font-size: 0.86rem;
+  color: #d9c08a;
+}
+.notice svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.error {
+  margin-bottom: 16px;
+  padding: 13px 15px;
+  background: rgba(214, 76, 127, 0.12);
+  border: 1px solid rgba(214, 76, 127, 0.3);
+  color: #f0699a;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  display: flex;
+  gap: 9px;
+}
+.error svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* Aucun abonnement */
+.none {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 40px 20px;
+  text-align: center;
+  backdrop-filter: blur(16px);
+}
+.none h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.none p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin-bottom: 18px;
+}
+.none a {
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: #d64c7f;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+
+.loading {
+  color: var(--muted);
+  padding: 40px 0;
+  text-align: center;
+}
+
+@media (max-width: 820px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,155 @@
+/* Mes séances — listes à venir / passées (Dark Glass). */
+
+.head {
+  margin-bottom: 22px;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.section {
+  margin-bottom: 26px;
+}
+.sectionTitle {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 8px 20px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.resa {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 0;
+  border-top: 1px solid var(--glass-border);
+}
+.resa:first-child {
+  border-top: none;
+}
+.rdate {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: var(--rd);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.rdate b {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.rdate span {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rinfo {
+  flex: 1;
+  min-width: 0;
+}
+.rinfo h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.rinfo p {
+  font-size: 0.83rem;
+  color: var(--muted);
+}
+
+.status {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 999px;
+  flex: none;
+}
+.stConfirmed {
+  color: #4caf83;
+  background: rgba(46, 125, 91, 0.15);
+}
+.stCompleted {
+  color: var(--muted);
+  background: var(--rd);
+}
+.stCancelled {
+  color: #d98a9a;
+  background: rgba(176, 35, 74, 0.14);
+}
+.stNoShow {
+  color: #c9a24a;
+  background: rgba(201, 162, 74, 0.14);
+}
+
+.cancelBtn {
+  background: none;
+  border: 1px solid var(--glass-border);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  flex: none;
+  transition: border-color 0.18s, color 0.18s;
+}
+.cancelBtn:hover:not(:disabled) {
+  border-color: #d64c7f;
+  color: #f0699a;
+}
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.error {
+  margin-bottom: 16px;
+  padding: 13px 15px;
+  background: rgba(214, 76, 127, 0.12);
+  border: 1px solid rgba(214, 76, 127, 0.3);
+  color: #f0699a;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  display: flex;
+  gap: 9px;
+}
+.error svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.loading {
+  color: var(--muted);
+  padding: 40px 0;
+  text-align: center;
+}
