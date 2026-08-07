@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import ColorPicker from "@/components/ColorPicker";
 import styles from "./Qrcode.module.css";
 
 // Palette MH
@@ -10,6 +11,16 @@ const COULEURS = [
   { hex: "#6E2A3B", name: "Vin" },
   { hex: "#F0699A", name: "Rose clair" },
   { hex: "#000000", name: "Noir" },
+];
+
+// Palette fond (avec option transparent)
+const COULEURS_FOND = [
+  { hex: "transparent", name: "Transparent" },
+  { hex: "#FFFFFF", name: "Blanc" },
+  { hex: "#170A11", name: "Nuit" },
+  { hex: "#D64C7F", name: "Rose" },
+  { hex: "#F0699A", name: "Rose clair" },
+  { hex: "#FBF9F8", name: "Crème" },
 ];
 
 const BASE_URL =
@@ -27,23 +38,60 @@ const STYLES_MODULE = [
   { key: "square", label: "Carré" },
 ];
 
+// Polices Google Fonts proposées pour le texte central
+const POLICES = [
+  { css: "'Inter', sans-serif", label: "Inter", gf: "Inter:wght@400;700;800" },
+  { css: "'Playfair Display', serif", label: "Playfair", gf: "Playfair+Display:wght@400;700;900" },
+  { css: "'Bebas Neue', sans-serif", label: "Bebas Neue", gf: "Bebas+Neue" },
+  { css: "'Montserrat', sans-serif", label: "Montserrat", gf: "Montserrat:wght@400;700;800" },
+  { css: "'Oswald', sans-serif", label: "Oswald", gf: "Oswald:wght@400;700" },
+  { css: "'Pacifico', cursive", label: "Pacifico", gf: "Pacifico" },
+  { css: "'Dancing Script', cursive", label: "Dancing Script", gf: "Dancing+Script:wght@400;700" },
+  { css: "'Anton', sans-serif", label: "Anton", gf: "Anton" },
+  { css: "'Poppins', sans-serif", label: "Poppins", gf: "Poppins:wght@400;700;800" },
+  { css: "'Abril Fatface', serif", label: "Abril Fatface", gf: "Abril+Fatface" },
+];
+
 export default function QrcodePage() {
   const [destination, setDestination] = useState(`${BASE_URL}/reservation`);
   const [activePreset, setActivePreset] = useState("/reservation");
   const [fgColor, setFgColor] = useState("#170A11");
   const [dotStyle, setDotStyle] = useState("rounded");
-  const [withLogo, setWithLogo] = useState(false);
+
+  // Centre : "none" | "logo" | "text"
+  const [centerMode, setCenterMode] = useState("none");
+
+  // Logo image
+  const [logoData, setLogoData] = useState(null);
+  const [logoName, setLogoName] = useState("");
+  const fileRef = useRef(null);
+
+  // Texte central
+  const [text, setText] = useState("MH");
+  const [textFont, setTextFont] = useState(POLICES[0].css);
+  const [textColor, setTextColor] = useState("#D64C7F");
+  const [textBg, setTextBg] = useState("#FFFFFF");
+  const [bgShape, setBgShape] = useState("round"); // "round" | "rect"
+  const [textSize, setTextSize] = useState(40);
+  const [textBold, setTextBold] = useState(true);
 
   const previewRef = useRef(null);
   const qrRef = useRef(null);
-  const QRLib = useRef(null);
 
-  // Charge la lib + crée l'instance QR une fois
+  // Charge toutes les polices Google une fois
+  useEffect(() => {
+    const href = `https://fonts.googleapis.com/css2?${POLICES.map((p) => `family=${p.gf}`).join("&")}&display=swap`;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }, []);
+
+  // Init QR
   useEffect(() => {
     let mounted = true;
     import("qr-code-styling").then((mod) => {
       if (!mounted) return;
-      QRLib.current = mod.default;
       qrRef.current = new mod.default(buildOptions());
       if (previewRef.current) {
         previewRef.current.innerHTML = "";
@@ -56,21 +104,61 @@ export default function QrcodePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Met à jour le QR à chaque changement
-  useEffect(() => {
-    if (qrRef.current) {
-      qrRef.current.update(buildOptions());
+  // Génère l'image du texte central (canvas → dataURL)
+  function buildTextImage() {
+    const size = 400;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, size, size);
+
+    const boxSize = 300;
+    const bx = (size - boxSize) / 2;
+    const by = (size - boxSize) / 2;
+
+    if (textBg !== "transparent") {
+      ctx.fillStyle = textBg;
+      if (bgShape === "round") {
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, boxSize / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        const r = 48;
+        ctx.beginPath();
+        ctx.moveTo(bx + r, by);
+        ctx.arcTo(bx + boxSize, by, bx + boxSize, by + boxSize, r);
+        ctx.arcTo(bx + boxSize, by + boxSize, bx, by + boxSize, r);
+        ctx.arcTo(bx, by + boxSize, bx, by, r);
+        ctx.arcTo(bx, by, bx + boxSize, by, r);
+        ctx.closePath();
+        ctx.fill();
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [destination, fgColor, dotStyle, withLogo]);
+
+    const weight = textBold ? "800" : "400";
+    ctx.font = `${weight} ${textSize * 2}px ${textFont}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = textColor;
+    ctx.fillText(text || "", size / 2, size / 2 + 2);
+
+    return canvas.toDataURL("image/png");
+  }
 
   function buildOptions() {
     const dotsType =
       dotStyle === "rounded" ? "rounded" : dotStyle === "dots" ? "dots" : "square";
+
+    let image;
+    if (centerMode === "logo" && logoData) image = logoData;
+    else if (centerMode === "text" && text) image = buildTextImage();
+
     return {
       width: 300,
       height: 300,
-      type: "svg",
+      type: "canvas",
       data: destination || BASE_URL,
       margin: 8,
       dotsOptions: { color: fgColor, type: dotsType },
@@ -80,11 +168,24 @@ export default function QrcodePage() {
       },
       cornersDotOptions: { color: fgColor, type: dotStyle === "dots" ? "dot" : undefined },
       backgroundOptions: { color: "#ffffff" },
-      image: withLogo ? "/logo-mark.png" : undefined,
-      imageOptions: { crossOrigin: "anonymous", margin: 6, imageSize: 0.4 },
+      image,
+      imageOptions: {
+        crossOrigin: "anonymous",
+        margin: 0,
+        imageSize: centerMode === "text" ? 0.55 : 0.4,
+        hideBackgroundDots: true,
+      },
       qrOptions: { errorCorrectionLevel: "H" },
     };
   }
+
+  // Met à jour à chaque changement
+  useEffect(() => {
+    if (!qrRef.current) return;
+    const t = setTimeout(() => qrRef.current.update(buildOptions()), 60);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destination, fgColor, dotStyle, centerMode, logoData, text, textFont, textColor, textBg, bgShape, textSize, textBold]);
 
   function choisirPreset(p) {
     if (p.url) {
@@ -99,6 +200,15 @@ export default function QrcodePage() {
   function onDestinationChange(v) {
     setDestination(v);
     setActivePreset(null);
+  }
+
+  function onLogoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => setLogoData(reader.result);
+    reader.readAsDataURL(file);
   }
 
   function exporter(format) {
@@ -145,9 +255,9 @@ export default function QrcodePage() {
             </div>
           </div>
 
-          {/* Couleur */}
+          {/* Couleur du QR */}
           <div className={styles.field}>
-            <label>Couleur</label>
+            <label>Couleur du QR</label>
             <div className={styles.swatches}>
               {COULEURS.map((c) => (
                 <button
@@ -159,15 +269,12 @@ export default function QrcodePage() {
                 />
               ))}
             </div>
-            <div className={styles.colorInputRow}>
-              <input type="color" value={fgColor} onChange={(e) => setFgColor(e.target.value)} />
-              <input type="text" value={fgColor} onChange={(e) => setFgColor(e.target.value)} />
-            </div>
+            <ColorPicker value={fgColor} onChange={setFgColor} />
           </div>
 
           {/* Style des modules */}
           <div className={styles.field}>
-            <label>Style</label>
+            <label>Style des modules</label>
             <div className={styles.segRow}>
               {STYLES_MODULE.map((s) => (
                 <button
@@ -181,13 +288,169 @@ export default function QrcodePage() {
             </div>
           </div>
 
-          {/* Logo */}
+          <div className={styles.divider} />
+          <div className={styles.sectionLabel}>Au centre</div>
+
+          {/* Mode centre */}
           <div className={styles.field}>
-            <label className={styles.checkRow}>
-              <input type="checkbox" checked={withLogo} onChange={(e) => setWithLogo(e.target.checked)} />
-              Ajouter le logo MH au centre
-            </label>
+            <div className={styles.segRow}>
+              {[
+                { k: "none", l: "Rien" },
+                { k: "logo", l: "Logo" },
+                { k: "text", l: "Texte" },
+              ].map((m) => (
+                <button
+                  key={m.k}
+                  className={`${styles.seg} ${centerMode === m.k ? styles.on : ""}`}
+                  onClick={() => setCenterMode(m.k)}
+                >
+                  {m.l}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Logo upload */}
+          {centerMode === "logo" && (
+            <div className={styles.field}>
+              <label>Image du logo</label>
+              <div className={styles.upload}>
+                <button className={styles.uploadBtn} onClick={() => fileRef.current?.click()}>
+                  Choisir un fichier
+                </button>
+                <span className={styles.uploadName}>{logoName || "Aucun fichier"}</span>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={onLogoUpload}
+                  style={{ display: "none" }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Texte options */}
+          {centerMode === "text" && (
+            <>
+              <div className={styles.field}>
+                <label>Texte</label>
+                <input
+                  type="text"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="MH"
+                  maxLength={12}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label>Police</label>
+                <div className={styles.selectWrap}>
+                  <select value={textFont} onChange={(e) => setTextFont(e.target.value)}>
+                    {POLICES.map((p) => (
+                      <option key={p.label} value={p.css} style={{ fontFamily: p.css }}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.field}>
+                <label>Couleur du texte</label>
+                <div className={styles.swatches}>
+                  {COULEURS.map((c) => (
+                    <button
+                      key={c.hex}
+                      className={`${styles.swatch} ${textColor.toLowerCase() === c.hex.toLowerCase() ? styles.on : ""}`}
+                      style={{ background: c.hex }}
+                      onClick={() => setTextColor(c.hex)}
+                      title={c.name}
+                    />
+                  ))}
+                </div>
+                <ColorPicker value={textColor} onChange={setTextColor} />
+              </div>
+
+              <div className={styles.field}>
+                <label>Couleur de fond du centre</label>
+                <div className={styles.swatches}>
+                  {COULEURS_FOND.map((c) => (
+                    <button
+                      key={c.hex}
+                      className={`${styles.swatch} ${textBg.toLowerCase() === c.hex.toLowerCase() ? styles.on : ""}`}
+                      style={
+                        c.hex === "transparent"
+                          ? {
+                              background:
+                                "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 12px 12px",
+                            }
+                          : { background: c.hex }
+                      }
+                      onClick={() => setTextBg(c.hex)}
+                      title={c.name}
+                    />
+                  ))}
+                </div>
+                {textBg !== "transparent" && (
+                  <ColorPicker value={textBg} onChange={setTextBg} />
+                )}
+              </div>
+
+              {textBg !== "transparent" && (
+                <div className={styles.field}>
+                  <label>Forme du fond</label>
+                  <div className={styles.segRow}>
+                    <button
+                      className={`${styles.seg} ${bgShape === "round" ? styles.on : ""}`}
+                      onClick={() => setBgShape("round")}
+                    >
+                      Ronde
+                    </button>
+                    <button
+                      className={`${styles.seg} ${bgShape === "rect" ? styles.on : ""}`}
+                      onClick={() => setBgShape("rect")}
+                    >
+                      Carré arrondi
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.field}>
+                <label>Taille du texte</label>
+                <div className={styles.sliderRow}>
+                  <input
+                    type="range"
+                    min="20"
+                    max="60"
+                    value={textSize}
+                    onChange={(e) => setTextSize(Number(e.target.value))}
+                  />
+                  <span className={styles.sliderVal}>{textSize}px</span>
+                </div>
+              </div>
+
+              <div className={styles.field}>
+                <label>Graisse</label>
+                <div className={styles.segRow}>
+                  <button
+                    className={`${styles.seg} ${!textBold ? styles.on : ""}`}
+                    onClick={() => setTextBold(false)}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    className={`${styles.seg} ${textBold ? styles.on : ""}`}
+                    onClick={() => setTextBold(true)}
+                  >
+                    Gras
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Aperçu + export */}

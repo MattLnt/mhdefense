@@ -21,7 +21,6 @@
   background: var(--bg);
   color: var(--txt);
   position: relative;
-  overflow-x: hidden;
   transition: grid-template-columns 0.3s ease, background 0.35s ease, color 0.35s ease;
 }
 .shell[data-theme="light"] {
@@ -47,8 +46,10 @@
   right: 10%;
   width: 600px;
   height: 480px;
+  max-width: 100%;
   background: radial-gradient(circle, var(--halo), transparent 62%);
   pointer-events: none;
+  z-index: 0;
 }
 
 /* ---------- Sidebar ---------- */

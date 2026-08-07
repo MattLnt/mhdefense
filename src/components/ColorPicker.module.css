@@ -1,0 +1,161 @@
+/* Color picker custom — Dark Glass, hérite du thème. */
+
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Pastille + champ hex (le "trigger") */
+.trigger {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1.5px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  cursor: pointer;
+  flex: none;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+/* Damier pour représenter le transparent éventuel */
+.trigger::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 10px 10px;
+  z-index: 0;
+}
+.triggerColor {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.hexInput {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1.5px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: 9px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.85rem;
+  background: var(--rd, rgba(255, 255, 255, 0.08));
+  color: var(--txt, #fff);
+  text-transform: uppercase;
+}
+.hexInput:focus {
+  outline: none;
+  border-color: #d64c7f;
+}
+
+/* Panneau flottant */
+.pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  width: 240px;
+  background: var(--bg, #20111a);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+:global([data-theme="light"]) .pop {
+  background: #ffffff;
+}
+
+/* Zone saturation / luminosité */
+.sbArea {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border-radius: 10px;
+  cursor: crosshair;
+  margin-bottom: 14px;
+  overflow: hidden;
+  touch-action: none;
+}
+/* couche blanc→couleur (horizontale) + noir (verticale) */
+.sbWhite {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+}
+.sbBlack {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, #000, rgba(0, 0, 0, 0));
+}
+.sbHandle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Curseur de teinte */
+.hueRow {
+  margin-bottom: 12px;
+}
+.hue {
+  position: relative;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    #ff0000 0%,
+    #ffff00 17%,
+    #00ff00 33%,
+    #00ffff 50%,
+    #0000ff 67%,
+    #ff00ff 83%,
+    #ff0000 100%
+  );
+  touch-action: none;
+}
+.hueHandle {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background: currentColor;
+}
+
+/* Champ hex dans le pop */
+.popHexRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.popHexRow span {
+  font-size: 0.85rem;
+  color: var(--muted, rgba(255, 255, 255, 0.55));
+  font-weight: 600;
+}
+.popHexRow input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1.5px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  background: var(--rd, rgba(255, 255, 255, 0.08));
+  color: var(--txt, #fff);
+  text-transform: uppercase;
+}
+.popHexRow input:focus {
+  outline: none;
+  border-color: #d64c7f;
+}
