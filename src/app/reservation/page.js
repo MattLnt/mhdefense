@@ -1,9 +1,54 @@
 "use client";
 
 import { useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import Header from "@/components/Header";
 import SlotPicker from "@/components/SlotPicker";
+import PaymentForm from "@/components/PaymentForm";
 import styles from "./Reservation.module.css";
+
+// Instance Stripe (clé publique) — chargée une seule fois hors du composant.
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+// Thème des Stripe Elements, accordé aux couleurs du site.
+const stripeAppearance = {
+  theme: "flat",
+  variables: {
+    colorPrimary: "#D64C7F",
+    colorText: "#1A1414",
+    colorTextSecondary: "#8B7E7C",
+    colorBackground: "#ffffff",
+    colorDanger: "#b0234a",
+    fontFamily: "Inter, system-ui, sans-serif",
+    borderRadius: "12px",
+    spacingUnit: "4px",
+  },
+  rules: {
+    ".Input": {
+      border: "1.5px solid #ECE4E3",
+      padding: "13px 15px",
+      boxShadow: "none",
+    },
+    ".Input:focus": {
+      border: "1.5px solid #D64C7F",
+      boxShadow: "0 0 0 3px rgba(214,76,127,0.09)",
+    },
+    ".Label": {
+      fontWeight: "600",
+      fontSize: "0.84rem",
+      color: "#574c4b",
+    },
+    ".Tab": {
+      border: "1.5px solid #ECE4E3",
+      boxShadow: "none",
+    },
+    ".Tab--selected": {
+      border: "1.5px solid #D64C7F",
+      boxShadow: "0 0 0 2px rgba(214,76,127,0.1)",
+    },
+  },
+};
 
 /* ---------- Données ---------- */
 
@@ -51,6 +96,13 @@ export default function ReservationPage() {
   const [slots, setSlots] = useState([]);
   const [paiement, setPaiement] = useState("COMPTANT");
 
+  const [loading, setLoading] = useState(false);
+  const [erreur, setErreur] = useState(null);
+
+  // Paiement : secret client + montant, une fois le PaymentIntent créé
+  const [clientSecret, setClientSecret] = useState(null);
+  const [payAmount, setPayAmount] = useState(0);
+
   const [form, setForm] = useState({
     name: "", email: "", phone: "", password: "", p2Name: "", p3Name: "",
   });
@@ -74,12 +126,62 @@ export default function ReservationPage() {
     setStep(1);
   }
 
+  // Prépare le paiement : bloque le créneau + crée le PaymentIntent,
+  // puis affiche le formulaire de carte (sans quitter la page).
+  async function preparerPaiement() {
+    setErreur(null);
+    setLoading(true);
+    try {
+      const holdRes = await fetch("/api/booking/hold", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startsAt: slots[0],
+          type: "PONCTUEL",
+          sessionType: type,
+          participantsCount: nbPersonnes,
+          isFreeTrial: false,
+        }),
+      });
+      const holdData = await holdRes.json();
+      if (!holdRes.ok) {
+        setErreur(holdData.error || "Ce créneau n'est plus disponible.");
+        setLoading(false);
+        return;
+      }
+
+      const checkoutRes = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: holdData.booking.id, mode: paiement }),
+      });
+      const checkoutData = await checkoutRes.json();
+      if (!checkoutRes.ok) {
+        setErreur(checkoutData.error || "Impossible de préparer le paiement.");
+        setLoading(false);
+        return;
+      }
+
+      setClientSecret(checkoutData.clientSecret);
+      setPayAmount(checkoutData.amount);
+      setLoading(false);
+    } catch (e) {
+      setErreur("Une erreur est survenue. Réessayez.");
+      setLoading(false);
+    }
+  }
+
   const canNext =
     step === 0 ? mode !== null
     : step === 1 ? true
     : step === 2 ? slots.length === maxSlots
     : step === 3 ? form.name && form.email && form.phone && (!isAbo || form.password.length >= 8)
     : true;
+
+  const returnUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/reservation/confirmation`
+      : "/reservation/confirmation";
 
   return (
     <>
@@ -360,7 +462,8 @@ export default function ReservationPage() {
                   </div>
                 </div>
 
-                {mode === "PONCTUEL" && (
+                {/* Mode de paiement (ponctuel) — masqué une fois le formulaire carte affiché */}
+                {mode === "PONCTUEL" && !clientSecret && (
                   <div className={styles.block}>
                     <div className={styles.blockTitle}>Mode de paiement</div>
                     <div className={styles.qSub}>Réglez la totalité ou un acompte pour bloquer le créneau.</div>
@@ -390,48 +493,80 @@ export default function ReservationPage() {
                   </div>
                 )}
 
-                <div className={styles.note}>
-                  <Info />
-                  <span>
-                    {isEssai
-                      ? "Séance offerte, aucun paiement requis. Un essai gratuit par personne. L'adresse exacte vous sera envoyée par email."
-                      : isAbo
-                      ? `Engagement de ${PLANS.find((p) => p.key === plan).months} mois, prélèvement mensuel. Une demande de résiliation prend effet à l'échéance de l'engagement.`
-                      : "Le créneau est bloqué dès validation du paiement. L'adresse exacte vous sera envoyée par email."}
-                  </span>
-                </div>
+                {/* Formulaire de carte Stripe, une fois le clientSecret prêt */}
+                {clientSecret && (
+                  <div className={styles.block}>
+                    <Elements
+                      stripe={stripePromise}
+                      options={{ clientSecret, appearance: stripeAppearance }}
+                    >
+                      <PaymentForm amount={payAmount} returnUrl={returnUrl} />
+                    </Elements>
+                  </div>
+                )}
+
+                {!clientSecret && (
+                  <div className={styles.note}>
+                    <Info />
+                    <span>
+                      {isEssai
+                        ? "Séance offerte, aucun paiement requis. Un essai gratuit par personne."
+                        : "Le créneau est bloqué dès validation du paiement. L'adresse exacte vous sera envoyée par email."}
+                    </span>
+                  </div>
+                )}
+
+                {erreur && (
+                  <div className={styles.note} style={{ background: "#fdecef", color: "#b0234a", marginTop: 14 }}>
+                    <Info />
+                    <span>{erreur}</span>
+                  </div>
+                )}
               </>
             )}
 
             {/* Navigation */}
             {step > 0 && (
               <div className={styles.nav}>
-                <button className={styles.back} onClick={() => setStep(step - 1)}>
+                <button
+                  className={styles.back}
+                  onClick={() => {
+                    // Si le formulaire carte est affiché, revenir masque juste le paiement
+                    if (clientSecret) {
+                      setClientSecret(null);
+                      setErreur(null);
+                    } else {
+                      setStep(step - 1);
+                    }
+                  }}
+                  disabled={loading}
+                >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                     <path d="M19 12H5M11 18l-6-6 6-6" />
                   </svg>
                   Retour
                 </button>
-                <button
-                  className={styles.next}
-                  disabled={!canNext}
-                  onClick={() => step < 4 && setStep(step + 1)}
-                >
-                  {step === 4
-                    ? isEssai ? "Confirmer ma séance d'essai" : `Payer ${aPayer} €`
-                    : "Continuer"}
-                  <Arrow />
-                </button>
-              </div>
-            )}
 
-            {step === 4 && !isEssai && (
-              <div className={styles.secure}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-                  <rect x="4" y="10" width="16" height="11" rx="2" />
-                  <path d="M8 10V7a4 4 0 018 0v3" />
-                </svg>
-                Paiement sécurisé via Stripe
+                {/* Le bouton principal disparaît quand le formulaire carte est affiché
+                    (c'est le bouton du PaymentForm qui prend le relais) */}
+                {!(step === 4 && clientSecret) && (
+                  <button
+                    className={styles.next}
+                    disabled={!canNext || loading}
+                    onClick={() => {
+                      if (step < 4) return setStep(step + 1);
+                      if (mode === "PONCTUEL") preparerPaiement();
+                      // ESSAI et ABONNEMENT : branchés plus tard
+                    }}
+                  >
+                    {loading
+                      ? "Préparation…"
+                      : step === 4
+                      ? isEssai ? "Confirmer ma séance d'essai" : "Procéder au paiement"
+                      : "Continuer"}
+                    <Arrow />
+                  </button>
+                )}
               </div>
             )}
           </div>

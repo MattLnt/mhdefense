@@ -1,0 +1,87 @@
+/* Formulaire de paiement Stripe Elements — au design MH Defense. */
+
+.pay {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 28px;
+}
+.title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 4px;
+}
+.title svg {
+  color: var(--rose);
+  flex: none;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-bottom: 22px;
+}
+
+.element {
+  margin-bottom: 4px;
+}
+
+.btn {
+  width: 100%;
+  margin-top: 22px;
+  padding: 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--rose);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+.btn:hover:not(:disabled) {
+  background: var(--rose-2);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 14px;
+  padding: 13px 15px;
+  background: #fdecef;
+  color: #b0234a;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  display: flex;
+  gap: 9px;
+}
+.error svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.secure {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 0.83rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.powered {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: #b5abaa;
+}
