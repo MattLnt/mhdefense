@@ -3,15 +3,14 @@
 import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import SlotPicker from "@/components/SlotPicker";
 import PaymentForm from "@/components/PaymentForm";
 import styles from "./Reservation.module.css";
 
-// Instance Stripe (clé publique) — chargée une seule fois hors du composant.
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-// Thème des Stripe Elements, accordé aux couleurs du site.
 const stripeAppearance = {
   theme: "flat",
   variables: {
@@ -25,28 +24,11 @@ const stripeAppearance = {
     spacingUnit: "4px",
   },
   rules: {
-    ".Input": {
-      border: "1.5px solid #ECE4E3",
-      padding: "13px 15px",
-      boxShadow: "none",
-    },
-    ".Input:focus": {
-      border: "1.5px solid #D64C7F",
-      boxShadow: "0 0 0 3px rgba(214,76,127,0.09)",
-    },
-    ".Label": {
-      fontWeight: "600",
-      fontSize: "0.84rem",
-      color: "#574c4b",
-    },
-    ".Tab": {
-      border: "1.5px solid #ECE4E3",
-      boxShadow: "none",
-    },
-    ".Tab--selected": {
-      border: "1.5px solid #D64C7F",
-      boxShadow: "0 0 0 2px rgba(214,76,127,0.1)",
-    },
+    ".Input": { border: "1.5px solid #ECE4E3", padding: "13px 15px", boxShadow: "none" },
+    ".Input:focus": { border: "1.5px solid #D64C7F", boxShadow: "0 0 0 3px rgba(214,76,127,0.09)" },
+    ".Label": { fontWeight: "600", fontSize: "0.84rem", color: "#574c4b" },
+    ".Tab": { border: "1.5px solid #ECE4E3", boxShadow: "none" },
+    ".Tab--selected": { border: "1.5px solid #D64C7F", boxShadow: "0 0 0 2px rgba(214,76,127,0.1)" },
   },
 };
 
@@ -70,6 +52,9 @@ const PRIX_ABO = {
   GROUPE: { SILVER: { 1: 160, 2: 280 }, GOLD: { 1: 150, 2: 260 }, PLATINUM: { 1: 140, 2: 240 } },
 };
 
+// Fréquence UI (1/2) → enum Prisma (ONCE/TWICE)
+const FREQ_ENUM = { 1: "ONCE", 2: "TWICE" };
+
 const STEP_LABELS = ["Votre choix", "Formule", "Créneau", "Vos informations", "Paiement"];
 
 const Arrow = () => (
@@ -87,6 +72,8 @@ const Info = () => (
 /* ---------- Page ---------- */
 
 export default function ReservationPage() {
+  const router = useRouter();
+
   const [step, setStep] = useState(0);
   const [mode, setMode] = useState(null); // PONCTUEL | ABONNEMENT | ESSAI
 
@@ -99,7 +86,6 @@ export default function ReservationPage() {
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState(null);
 
-  // Paiement : secret client + montant, une fois le PaymentIntent créé
   const [clientSecret, setClientSecret] = useState(null);
   const [payAmount, setPayAmount] = useState(0);
 
@@ -115,19 +101,18 @@ export default function ReservationPage() {
 
   const prixUnitaire = isAbo ? PRIX_ABO[type][plan][freq] : typeInfo.prixPonctuel;
   const total = isEssai ? 0 : prixUnitaire * nbPersonnes;
-  const aPayer = isEssai ? 0 : isAbo ? total : paiement === "ACOMPTE" ? Math.round(total / 2) : total;
 
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   function choisir(m) {
     setMode(m);
     setSlots([]);
+    setErreur(null);
     if (m === "ESSAI") setType("INDIVIDUEL");
     setStep(1);
   }
 
-  // Prépare le paiement : bloque le créneau + crée le PaymentIntent,
-  // puis affiche le formulaire de carte (sans quitter la page).
+  // Paiement ponctuel : hold + PaymentIntent → formulaire carte
   async function preparerPaiement() {
     setErreur(null);
     setLoading(true);
@@ -171,6 +156,67 @@ export default function ReservationPage() {
     }
   }
 
+  // Abonnement : crée le compte + l'abo Stripe → formulaire carte (1re mensualité)
+  async function preparerAbonnement() {
+    setErreur(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/subscription/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          password: form.password,
+          sessionType: type,
+          planKey: plan,
+          frequency: FREQ_ENUM[freq],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErreur(data.error || "Impossible de créer l'abonnement.");
+        setLoading(false);
+        return;
+      }
+      setClientSecret(data.clientSecret);
+      setPayAmount(data.amount);
+      setLoading(false);
+    } catch (e) {
+      setErreur("Une erreur est survenue. Réessayez.");
+      setLoading(false);
+    }
+  }
+
+  // Essai gratuit : création directe → confirmation
+  async function confirmerEssai() {
+    setErreur(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/booking/essai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startsAt: slots[0],
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErreur(data.error || "Impossible d'enregistrer votre séance d'essai.");
+        setLoading(false);
+        return;
+      }
+      router.push("/reservation/confirmation?essai=1");
+    } catch (e) {
+      setErreur("Une erreur est survenue. Réessayez.");
+      setLoading(false);
+    }
+  }
+
   const canNext =
     step === 0 ? mode !== null
     : step === 1 ? true
@@ -180,7 +226,7 @@ export default function ReservationPage() {
 
   const returnUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/reservation/confirmation`
+      ? `${window.location.origin}/reservation/confirmation${isAbo ? "?abo=1" : ""}`
       : "/reservation/confirmation";
 
   return (
@@ -343,11 +389,15 @@ export default function ReservationPage() {
             {/* 3. Créneau */}
             {step === 2 && (
               <>
-                <div className={styles.qTitle}>Quand souhaitez-vous venir ?</div>
+                <div className={styles.qTitle}>
+                  {isAbo ? "Votre créneau habituel" : "Quand souhaitez-vous venir ?"}
+                </div>
                 <div className={styles.qSub}>
-                  {maxSlots === 1
-                    ? "Séances d'1 heure, du lundi au dimanche."
-                    : "Choisissez vos 2 créneaux hebdomadaires."}
+                  {isAbo
+                    ? maxSlots === 1
+                      ? "Choisissez votre créneau hebdomadaire habituel. Vous pourrez l'ajuster chaque semaine depuis votre compte."
+                      : "Choisissez vos 2 créneaux hebdomadaires habituels. Vous pourrez les ajuster chaque semaine depuis votre compte."
+                    : "Séances d'1 heure, du lundi au dimanche."}
                 </div>
                 <div className={styles.slotWrap}>
                   <SlotPicker max={maxSlots} value={slots} onChange={setSlots} />
@@ -403,11 +453,19 @@ export default function ReservationPage() {
               </>
             )}
 
-            {/* 5. Paiement */}
+            {/* 5. Paiement / Confirmation */}
             {step === 4 && (
               <>
-                <div className={styles.qTitle}>Vérifiez et confirmez</div>
-                <div className={styles.qSub}>Un récapitulatif avant le paiement sécurisé.</div>
+                <div className={styles.qTitle}>
+                  {isEssai ? "Confirmez votre séance d'essai" : "Vérifiez et confirmez"}
+                </div>
+                <div className={styles.qSub}>
+                  {isEssai
+                    ? "Séance découverte offerte, sans paiement."
+                    : isAbo
+                    ? "Un récapitulatif avant le paiement de la première mensualité."
+                    : "Un récapitulatif avant le paiement sécurisé."}
+                </div>
 
                 <div className={styles.recap}>
                   <div className={styles.recapRow}>
@@ -427,7 +485,9 @@ export default function ReservationPage() {
                     </div>
                   )}
                   <div className={styles.recapRow}>
-                    <span>{slots.length > 1 ? "Créneaux" : "Date & heure"}</span>
+                    <span>
+                      {isAbo ? "Créneau habituel" : slots.length > 1 ? "Créneaux" : "Date & heure"}
+                    </span>
                     <span>
                       {slots
                         .map((iso) =>
@@ -457,12 +517,12 @@ export default function ReservationPage() {
                   <div className={styles.recapTotal}>
                     <span className={styles.label}>{isAbo ? "Total mensuel" : "Total"}</span>
                     <span className={styles.amount}>
-                      {total} €<span>{isAbo ? " / mois" : " TTC"}</span>
+                      {total} €<span>{isAbo ? " / mois" : isEssai ? "" : " TTC"}</span>
                     </span>
                   </div>
                 </div>
 
-                {/* Mode de paiement (ponctuel) — masqué une fois le formulaire carte affiché */}
+                {/* Mode de paiement (ponctuel uniquement) */}
                 {mode === "PONCTUEL" && !clientSecret && (
                   <div className={styles.block}>
                     <div className={styles.blockTitle}>Mode de paiement</div>
@@ -493,7 +553,7 @@ export default function ReservationPage() {
                   </div>
                 )}
 
-                {/* Formulaire de carte Stripe, une fois le clientSecret prêt */}
+                {/* Formulaire de carte Stripe (ponctuel ET abonnement) */}
                 {clientSecret && (
                   <div className={styles.block}>
                     <Elements
@@ -510,7 +570,9 @@ export default function ReservationPage() {
                     <Info />
                     <span>
                       {isEssai
-                        ? "Séance offerte, aucun paiement requis. Un essai gratuit par personne."
+                        ? "Séance offerte, aucun paiement requis. Un essai gratuit par personne. L'adresse exacte vous sera envoyée par email."
+                        : isAbo
+                        ? `Engagement de ${PLANS.find((p) => p.key === plan).months} mois. La première mensualité est prélevée maintenant, puis chaque mois. Une demande de résiliation prend effet à l'échéance de l'engagement.`
                         : "Le créneau est bloqué dès validation du paiement. L'adresse exacte vous sera envoyée par email."}
                     </span>
                   </div>
@@ -531,7 +593,6 @@ export default function ReservationPage() {
                 <button
                   className={styles.back}
                   onClick={() => {
-                    // Si le formulaire carte est affiché, revenir masque juste le paiement
                     if (clientSecret) {
                       setClientSecret(null);
                       setErreur(null);
@@ -547,26 +608,35 @@ export default function ReservationPage() {
                   Retour
                 </button>
 
-                {/* Le bouton principal disparaît quand le formulaire carte est affiché
-                    (c'est le bouton du PaymentForm qui prend le relais) */}
                 {!(step === 4 && clientSecret) && (
                   <button
                     className={styles.next}
                     disabled={!canNext || loading}
                     onClick={() => {
                       if (step < 4) return setStep(step + 1);
-                      if (mode === "PONCTUEL") preparerPaiement();
-                      // ESSAI et ABONNEMENT : branchés plus tard
+                      if (mode === "PONCTUEL") return preparerPaiement();
+                      if (mode === "ESSAI") return confirmerEssai();
+                      if (mode === "ABONNEMENT") return preparerAbonnement();
                     }}
                   >
                     {loading
-                      ? "Préparation…"
+                      ? "Traitement…"
                       : step === 4
                       ? isEssai ? "Confirmer ma séance d'essai" : "Procéder au paiement"
                       : "Continuer"}
                     <Arrow />
                   </button>
                 )}
+              </div>
+            )}
+
+            {step === 4 && !isEssai && !clientSecret && (
+              <div className={styles.secure}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                  <rect x="4" y="10" width="16" height="11" rx="2" />
+                  <path d="M8 10V7a4 4 0 018 0v3" />
+                </svg>
+                Paiement sécurisé via Stripe
               </div>
             )}
           </div>

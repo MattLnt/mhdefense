@@ -22,18 +22,17 @@ export async function POST(request) {
 
   try {
     switch (event.type) {
-      // Paiement carte validé
+      /* ---------- PONCTUEL ---------- */
+
+      // Paiement carte ponctuel validé
       case "payment_intent.succeeded": {
         const intent = event.data.object;
         const bookingId = intent.metadata?.bookingId;
-        if (!bookingId) break;
+        if (!bookingId) break; // (les PaymentIntents d'abonnement n'ont pas ce metadata)
 
-        const payment = await prisma.payment.findUnique({
-          where: { bookingId },
-        });
+        const payment = await prisma.payment.findUnique({ where: { bookingId } });
         if (!payment) break;
 
-        // Comptant → payé ; acompte → partiel (solde sur place)
         const newStatus = payment.mode === "ACOMPTE" ? "PARTIAL" : "PAID";
 
         await prisma.$transaction([
@@ -43,24 +42,19 @@ export async function POST(request) {
           }),
           prisma.payment.update({
             where: { bookingId },
-            data: {
-              status: newStatus,
-              stripePaymentIntentId: intent.id,
-            },
+            data: { status: newStatus, stripePaymentIntentId: intent.id },
           }),
         ]);
         break;
       }
 
-      // Paiement échoué → on libère le créneau
+      // Paiement ponctuel échoué → libère le créneau
       case "payment_intent.payment_failed": {
         const intent = event.data.object;
         const bookingId = intent.metadata?.bookingId;
         if (!bookingId) break;
 
-        const booking = await prisma.booking.findUnique({
-          where: { id: bookingId },
-        });
+        const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
         if (booking && booking.status === "HELD") {
           await prisma.$transaction([
             prisma.booking.update({
@@ -73,6 +67,60 @@ export async function POST(request) {
             }),
           ]);
         }
+        break;
+      }
+
+      /* ---------- ABONNEMENT ---------- */
+
+      // Facture payée (1re mensualité ET renouvellements mensuels)
+      case "invoice.paid": {
+        const invoice = event.data.object;
+        const subId = invoice.subscription;
+        if (!subId) break;
+
+        // On (ré)active l'abonnement à chaque paiement mensuel réussi
+        await prisma.subscription.updateMany({
+          where: { stripeSubId: subId },
+          data: { status: "ACTIVE" },
+        });
+        break;
+      }
+
+      // Échec de prélèvement mensuel
+      case "invoice.payment_failed": {
+        const invoice = event.data.object;
+        const subId = invoice.subscription;
+        if (!subId) break;
+
+        await prisma.subscription.updateMany({
+          where: { stripeSubId: subId },
+          data: { status: "PAST_DUE" },
+        });
+        break;
+      }
+
+      // Abonnement résilié (fin d'engagement atteinte, ou annulation)
+      case "customer.subscription.deleted": {
+        const sub = event.data.object;
+        await prisma.subscription.updateMany({
+          where: { stripeSubId: sub.id },
+          data: { status: "ENDED" },
+        });
+        break;
+      }
+
+      // Mise à jour d'abonnement (ex. résiliation programmée en fin d'engagement)
+      case "customer.subscription.updated": {
+        const sub = event.data.object;
+        // Si Stripe a programmé une fin (cancel_at), on la reflète en base
+        const cancelAt = sub.cancel_at ? new Date(sub.cancel_at * 1000) : null;
+        await prisma.subscription.updateMany({
+          where: { stripeSubId: sub.id },
+          data: {
+            cancelAt,
+            status: sub.status === "past_due" ? "PAST_DUE" : "ACTIVE",
+          },
+        });
         break;
       }
 
