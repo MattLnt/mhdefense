@@ -4,8 +4,10 @@ import { stripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
+const QUOTA = { ONCE: 1, TWICE: 2 };
+
 /**
- * Incrémente le compteur d'utilisation d'un code promo (si présent et existant).
+ * Incrémente le compteur d'utilisation d'un code promo (si présent).
  * Best-effort : n'interrompt jamais le traitement du webhook.
  */
 async function consommerPromo(code) {
@@ -18,6 +20,63 @@ async function consommerPromo(code) {
   } catch (e) {
     console.error("[webhook] incrément promo échoué :", e.message);
   }
+}
+
+/**
+ * Crée le vrai compte + l'abonnement à partir d'une PendingSignup,
+ * puis supprime la PendingSignup. Idempotent : si le compte existe déjà
+ * (webhook rejoué), ne fait rien.
+ */
+async function creerCompteDepuisPending(pendingSignupId, subId) {
+  if (!pendingSignupId) return;
+
+  const pending = await prisma.pendingSignup.findUnique({
+    where: { id: pendingSignupId },
+  });
+  // Déjà traité (webhook rejoué) ou introuvable → rien à faire
+  if (!pending) return;
+
+  // Sécurité : si un user existe déjà avec cet email, on nettoie et on sort
+  const existing = await prisma.user.findUnique({ where: { email: pending.email } });
+  if (existing) {
+    await prisma.pendingSignup.delete({ where: { id: pending.id } }).catch(() => {});
+    return;
+  }
+
+  const now = new Date();
+  const engagementEndsAt = new Date(now);
+  engagementEndsAt.setMonth(engagementEndsAt.getMonth() + pending.engagementMonths);
+
+  // Création atomique : User + Subscription, puis suppression de la PendingSignup
+  await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        email: pending.email,
+        name: pending.name,
+        phone: pending.phone,
+        passwordHash: pending.passwordHash,
+        role: "CLIENT",
+        stripeCustomerId: pending.stripeCustomerId,
+      },
+    });
+
+    await tx.subscription.create({
+      data: {
+        userId: user.id,
+        planId: pending.planId,
+        sessionType: pending.sessionType,
+        frequency: pending.frequency,
+        weeklyQuota: QUOTA[pending.frequency],
+        participantsCount: pending.participantsCount,
+        status: "ACTIVE",
+        engagementEndsAt,
+        stripeSubId: pending.stripeSubId,
+        stripeCustomerId: pending.stripeCustomerId,
+      },
+    });
+
+    await tx.pendingSignup.delete({ where: { id: pending.id } });
+  });
 }
 
 export async function POST(request) {
@@ -62,7 +121,6 @@ export async function POST(request) {
           }),
         ]);
 
-        // Code promo éventuel → on incrémente le compteur d'utilisation
         await consommerPromo(intent.metadata?.promoCode);
         break;
       }
@@ -97,20 +155,27 @@ export async function POST(request) {
         const subId = invoice.subscription;
         if (!subId) break;
 
-        // On (ré)active l'abonnement à chaque paiement mensuel réussi
-        await prisma.subscription.updateMany({
-          where: { stripeSubId: subId },
-          data: { status: "ACTIVE" },
-        });
-
-        // Code promo : uniquement à la PREMIÈRE facture (pas aux renouvellements)
-        // billing_reason = "subscription_create" pour la 1re facture.
+        // 1re facture → on crée le compte + l'abonnement depuis la PendingSignup
         if (invoice.billing_reason === "subscription_create") {
-          const code =
-            invoice.metadata?.promoCode ||
-            invoice.subscription_details?.metadata?.promoCode ||
-            null;
-          await consommerPromo(code);
+          // On récupère l'abonnement pour lire ses métadonnées
+          let pendingSignupId = null;
+          let promoCode = null;
+          try {
+            const sub = await stripe.subscriptions.retrieve(subId);
+            pendingSignupId = sub.metadata?.pendingSignupId || null;
+            promoCode = sub.metadata?.promoCode || null;
+          } catch (e) {
+            console.error("[webhook] retrieve subscription échoué :", e.message);
+          }
+
+          await creerCompteDepuisPending(pendingSignupId, subId);
+          await consommerPromo(promoCode);
+        } else {
+          // Renouvellement mensuel → on (ré)active l'abonnement existant
+          await prisma.subscription.updateMany({
+            where: { stripeSubId: subId },
+            data: { status: "ACTIVE" },
+          });
         }
         break;
       }

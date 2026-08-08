@@ -268,6 +268,38 @@ model Subscription {
   @@index([status])
 }
 
+// Demande d'inscription en attente de paiement (parcours abonnement).
+// Le vrai User + Subscription ne sont créés qu'au 1er paiement confirmé
+// (webhook invoice.paid). Une ligne abandonnée est purgée après 24h.
+model PendingSignup {
+  id                String      @id @default(cuid())
+
+  // Infos du compte à créer (mot de passe déjà hashé)
+  email             String
+  name              String
+  phone             String
+  passwordHash      String
+
+  // Formule choisie
+  planId            String
+  sessionType       SessionType
+  frequency         Frequency
+  participantsCount Int         @default(1)
+  engagementMonths  Int
+
+  // Rattachement Stripe (créés avant paiement)
+  stripeCustomerId  String
+  stripeSubId       String      @unique
+
+  // Créneau habituel éventuellement choisi (ISO), optionnel
+  preferredSlot     String?
+
+  createdAt         DateTime    @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+}
+
 // ========================================================
 //  CODES PROMO
 // ========================================================

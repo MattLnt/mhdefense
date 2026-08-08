@@ -5,9 +5,7 @@ import { stripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
-// Nombre de personnes selon le type
 const PERSONNES = { INDIVIDUEL: 1, DUO: 2, GROUPE: 3 };
-// Quota hebdomadaire selon la fréquence
 const QUOTA = { ONCE: 1, TWICE: 2 };
 
 const LABEL = {
@@ -16,10 +14,6 @@ const LABEL = {
   GROUPE: "Abonnement petit groupe",
 };
 
-/**
- * Revalide un code promo (scope ABONNEMENT/ALL) et crée un coupon Stripe
- * one-time (réduction sur la 1re mensualité). Retourne { promo, couponId }.
- */
 async function preparerPromo(codeRaw, montantMensuel) {
   if (!codeRaw?.trim()) return { promo: null, couponId: null };
 
@@ -35,7 +29,6 @@ async function preparerPromo(codeRaw, montantMensuel) {
     return { promo: null, couponId: null };
   if (promo.scope !== "ALL" && promo.scope !== "ABONNEMENT") return { promo: null, couponId: null };
 
-  // Création d'un coupon Stripe one-time (1er mois)
   let coupon;
   if (promo.discountType === "PERCENT") {
     coupon = await stripe.coupons.create({
@@ -44,7 +37,6 @@ async function preparerPromo(codeRaw, montantMensuel) {
       name: `Code ${promo.code}`,
     });
   } else {
-    // FIXED : discountValue en centimes, plafonné au montant mensuel
     const amountOff = Math.min(promo.discountValue, montantMensuel);
     coupon = await stripe.coupons.create({
       amount_off: amountOff,
@@ -59,16 +51,15 @@ async function preparerPromo(codeRaw, montantMensuel) {
 
 /**
  * POST /api/subscription/create
- * Body : { name, email, phone, password, sessionType, planKey, frequency, promoCode? }
- * Crée le compte + l'abonnement Stripe, renvoie le clientSecret
- * pour régler la première mensualité.
+ * Body : { name, email, phone, password, sessionType, planKey, frequency, promoCode?, preferredSlot? }
+ * Enregistre une PendingSignup + l'abonnement Stripe.
+ * Le vrai User + Subscription sont créés au 1er paiement confirmé (webhook invoice.paid).
  */
 export async function POST(request) {
   try {
-    const { name, email, phone, password, sessionType, planKey, frequency, promoCode } =
+    const { name, email, phone, password, sessionType, planKey, frequency, promoCode, preferredSlot } =
       await request.json();
 
-    // Validation
     if (!name || !email || !phone || !password || !sessionType || !planKey || !frequency) {
       return NextResponse.json({ error: "Informations incomplètes." }, { status: 400 });
     }
@@ -81,7 +72,6 @@ export async function POST(request) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Email déjà utilisé ?
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       return NextResponse.json(
@@ -90,14 +80,9 @@ export async function POST(request) {
       );
     }
 
-    // Le plan (tarif) correspondant, lu depuis la base (source de vérité)
     const plan = await prisma.plan.findUnique({
       where: {
-        key_sessionType_frequency: {
-          key: planKey,
-          sessionType,
-          frequency,
-        },
+        key_sessionType_frequency: { key: planKey, sessionType, frequency },
       },
     });
     if (!plan || !plan.active) {
@@ -105,38 +90,29 @@ export async function POST(request) {
     }
 
     const nbPersonnes = PERSONNES[sessionType];
-    const montantMensuel = plan.price * nbPersonnes; // en centimes
+    const montantMensuel = plan.price * nbPersonnes;
 
-    // Code promo (coupon Stripe one-time) — revalidé côté serveur
     const { promo, couponId } = await preparerPromo(promoCode, montantMensuel);
 
-    // 1. Création du compte client
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        name: name.trim(),
-        phone: phone.trim(),
-        passwordHash,
-        role: "CLIENT",
-      },
-    });
-
-    // 2. Client Stripe
+    // 1. Client Stripe (créé avant paiement, mais PAS le compte en base)
     const customer = await stripe.customers.create({
       email: normalizedEmail,
       name: name.trim(),
-      metadata: { userId: user.id },
     });
 
-    // 3. Abonnement Stripe récurrent (prix à la volée)
+    // 2. Produit Stripe (l'API récente n'accepte plus product_data inline)
+    const product = await stripe.products.create({
+      name: LABEL[sessionType],
+    });
+
+    // 3. Abonnement Stripe récurrent (prix à la volée référençant le produit)
     const subscriptionParams = {
       customer: customer.id,
       items: [
         {
           price_data: {
             currency: "eur",
-            product_data: { name: LABEL[sessionType] },
+            product: product.id,
             unit_amount: montantMensuel,
             recurring: { interval: "month" },
           },
@@ -145,10 +121,9 @@ export async function POST(request) {
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
       expand: ["latest_invoice.payment_intent"],
-      metadata: { userId: user.id },
+      metadata: {},
     };
 
-    // Coupon promo (réduction 1er mois) + métadonnée pour l'incrément au webhook
     if (couponId) {
       subscriptionParams.discounts = [{ coupon: couponId }];
       subscriptionParams.metadata.promoCode = promo.code;
@@ -156,33 +131,35 @@ export async function POST(request) {
 
     const subscription = await stripe.subscriptions.create(subscriptionParams);
 
-    const clientSecret =
-      subscription.latest_invoice?.payment_intent?.client_secret;
-
-    // 4. Enregistrement de l'abonnement en base
-    const now = new Date();
-    const engagementEndsAt = new Date(now);
-    engagementEndsAt.setMonth(engagementEndsAt.getMonth() + plan.engagementMonths);
-
-    await prisma.subscription.create({
+    // 4. Demande d'inscription en attente (compte créé au paiement)
+    const passwordHash = await bcrypt.hash(password, 10);
+    const pending = await prisma.pendingSignup.create({
       data: {
-        userId: user.id,
+        email: normalizedEmail,
+        name: name.trim(),
+        phone: phone.trim(),
+        passwordHash,
         planId: plan.id,
         sessionType,
         frequency,
-        weeklyQuota: QUOTA[frequency],
         participantsCount: nbPersonnes,
-        status: "ACTIVE",
-        engagementEndsAt,
-        stripeSubId: subscription.id,
+        engagementMonths: plan.engagementMonths,
         stripeCustomerId: customer.id,
+        stripeSubId: subscription.id,
+        preferredSlot: preferredSlot || null,
       },
     });
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { stripeCustomerId: customer.id },
+    // 5. On rattache l'id de la PendingSignup à l'abonnement Stripe
+    await stripe.subscriptions.update(subscription.id, {
+      metadata: {
+        ...(subscription.metadata || {}),
+        pendingSignupId: pending.id,
+      },
     });
+
+    const clientSecret =
+      subscription.latest_invoice?.payment_intent?.client_secret;
 
     return NextResponse.json({
       clientSecret,
