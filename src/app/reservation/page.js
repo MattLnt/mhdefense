@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import SlotPicker from "@/components/SlotPicker";
 import PaymentForm from "@/components/PaymentForm";
+import PasswordField, { isPasswordValid } from "@/components/PasswordField";
 import styles from "./Reservation.module.css";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
@@ -277,7 +278,7 @@ export default function ReservationPage() {
     step === 0 ? mode !== null
     : step === 1 ? true
     : step === 2 ? slots.length === maxSlots
-    : step === 3 ? form.name && form.email && form.phone && (!isAbo || form.password.length >= 8)
+    : step === 3 ? form.name && form.email && form.phone && (!isAbo || isPasswordValid(form.password))
     : true;
 
   const returnUrl =
@@ -485,8 +486,12 @@ export default function ReservationPage() {
                   </div>
                   {isAbo && (
                     <div className={styles.field}>
-                      <label htmlFor="password">Mot de passe (8 car. min.)</label>
-                      <input id="password" type="password" value={form.password} onChange={(e) => setField("password", e.target.value)} placeholder="••••••••" />
+                      <label htmlFor="password">Mot de passe</label>
+                      <PasswordField
+                        id="password"
+                        value={form.password}
+                        onChange={(v) => setField("password", v)}
+                      />
                     </div>
                   )}
 

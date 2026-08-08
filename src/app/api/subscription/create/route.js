@@ -72,6 +72,11 @@ export async function POST(request) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
+    // Validation du format email (évite un plantage Stripe sur email malformé)
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return NextResponse.json({ error: "Adresse email invalide." }, { status: 400 });
+    }
+
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       return NextResponse.json(
@@ -144,7 +149,6 @@ export async function POST(request) {
         expand: ["payment_intent", "confirmation_secret"],
       });
 
-      // Si la facture n'est pas finalisée, on la finalise (déclenche le PI)
       if (invoice.status === "draft") {
         invoice = await stripe.invoices.finalizeInvoice(invoiceId, {
           expand: ["payment_intent", "confirmation_secret"],
@@ -158,16 +162,10 @@ export async function POST(request) {
       }
       clientSecret = pi?.client_secret || null;
 
-      // Piste 2 : nouveau champ confirmation_secret (API récente "dahlia")
+      // Piste 2 : confirmation_secret (API récente "dahlia")
       if (!clientSecret && invoice.confirmation_secret?.client_secret) {
         clientSecret = invoice.confirmation_secret.client_secret;
       }
-
-      // Debug : structure de l'invoice pour localiser le secret
-      console.log("[subscription/create] invoice.status:", invoice.status);
-      console.log("[subscription/create] payment_intent:", JSON.stringify(invoice.payment_intent)?.slice(0, 120));
-      console.log("[subscription/create] confirmation_secret:", JSON.stringify(invoice.confirmation_secret)?.slice(0, 120));
-      console.log("[subscription/create] clientSecret présent ?", !!clientSecret);
     }
 
     // 5. Demande d'inscription en attente (compte créé au paiement)
