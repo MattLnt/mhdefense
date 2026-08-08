@@ -26,13 +26,13 @@ const Check = () => (
 
 /**
  * Champ mot de passe avec œil, indicateur de force et check-list des règles.
+ * @param {boolean} dark  variante sombre (pour fond sombre)
  */
-export default function PasswordField({ value, onChange, id = "password", placeholder = "••••••••" }) {
+export default function PasswordField({ value, onChange, id = "password", placeholder = "••••••••", dark = false }) {
   const [show, setShow] = useState(false);
 
   const passed = RULES.filter((r) => r.test(value || "")).length;
 
-  // Force : label + pourcentage de remplissage de la barre
   let levelLabel = "";
   let fillPct = 0;
   if (value) {
@@ -41,8 +41,10 @@ export default function PasswordField({ value, onChange, id = "password", placeh
     else { levelLabel = "Fort"; fillPct = 100; }
   }
 
+  const wrapClass = dark ? `${styles.wrap} ${styles.dark}` : styles.wrap;
+
   return (
-    <div className={styles.wrap}>
+    <div className={wrapClass}>
       <div className={styles.inputRow}>
         <svg className={styles.lock} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
           <rect x="4" y="11" width="16" height="10" rx="2" />
@@ -76,7 +78,7 @@ export default function PasswordField({ value, onChange, id = "password", placeh
         </button>
       </div>
 
-      {/* Barre de force : piste + remplissage dégradé */}
+      {/* Barre de force */}
       {value && (
         <div className={styles.strength}>
           <div className={styles.track}>
