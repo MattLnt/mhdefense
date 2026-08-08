@@ -3,19 +3,46 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { loadStripe } from "@stripe/stripe-js";
 import Header from "@/components/Header";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 function Confirmation() {
   const params = useSearchParams();
   const [status, setStatus] = useState("loading"); // loading | success | processing | error
 
   useEffect(() => {
-    // Stripe renvoie ?payment_intent=...&redirect_status=...
-    const redirect = params.get("redirect_status");
-    if (redirect === "succeeded") setStatus("success");
-    else if (redirect === "processing") setStatus("processing");
-    else if (redirect) setStatus("error");
-    else setStatus("success"); // fallback
+    const clientSecret = params.get("payment_intent_client_secret");
+
+    // Pas de client_secret dans l'URL → on se rabat sur redirect_status
+    if (!clientSecret) {
+      const redirect = params.get("redirect_status");
+      if (redirect === "succeeded") setStatus("success");
+      else if (redirect === "processing") setStatus("processing");
+      else setStatus("error");
+      return;
+    }
+
+    // On vérifie le vrai statut du PaymentIntent auprès de Stripe
+    stripePromise.then((stripe) => {
+      if (!stripe) {
+        setStatus("error");
+        return;
+      }
+      stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
+        switch (paymentIntent?.status) {
+          case "succeeded":
+            setStatus("success");
+            break;
+          case "processing":
+            setStatus("processing");
+            break;
+          default:
+            setStatus("error");
+        }
+      });
+    });
   }, [params]);
 
   return (
@@ -45,10 +72,10 @@ function Confirmation() {
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
               </div>
-              <h1 style={{ fontSize: "2.2rem", marginBottom: 12 }}>Réservation confirmée !</h1>
+              <h1 style={{ fontSize: "2.2rem", marginBottom: 12 }}>Paiement confirmé !</h1>
               <p style={{ color: "rgba(255,255,255,0.72)", fontSize: "1.05rem" }}>
                 Merci, votre paiement a bien été reçu. Vous allez recevoir un
-                email de confirmation avec tous les détails de votre séance.
+                email de confirmation avec tous les détails.
               </p>
             </>
           )}
@@ -71,11 +98,14 @@ function Confirmation() {
             </>
           )}
           {status === "loading" && (
-            <p style={{ color: "rgba(255,255,255,0.72)" }}>Vérification…</p>
+            <p style={{ color: "rgba(255,255,255,0.72)" }}>Vérification du paiement…</p>
           )}
 
           <div style={{ marginTop: 34, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/" className="btn btn-rose">Retour à l'accueil</Link>
+            {status === "success" && (
+              <Link href="/compte" className="btn btn-outline">Accéder à mon espace</Link>
+            )}
             {status === "error" && (
               <Link href="/reservation" className="btn btn-outline">Réessayer</Link>
             )}
