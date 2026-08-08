@@ -1,0 +1,268 @@
+/* Page L'instructrice — portrait premium (site public clair). */
+
+.page {
+  min-height: 100vh;
+  background: var(--paper);
+}
+.narrow {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 26px;
+}
+
+/* Hero split : photo + intro */
+.hero {
+  position: relative;
+  background: var(--night);
+  color: #fff;
+  padding: 130px 0 70px;
+  overflow: hidden;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  top: -200px;
+  left: -140px;
+  width: 640px;
+  height: 640px;
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.28), transparent 62%);
+  pointer-events: none;
+}
+.heroGrid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 48px;
+  align-items: center;
+}
+.heroPhoto {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(150deg, #6e2a3b, #170a11);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.heroPhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.heroPhotoPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.9rem;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f0699a;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+.hero h1 span {
+  color: var(--rose-2);
+}
+.role {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.05rem;
+  margin-bottom: 22px;
+}
+.heroText {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 26px;
+}
+.heroStats {
+  display: flex;
+  gap: 30px;
+}
+.heroStat b {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.heroStat span {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Corps */
+.body {
+  padding: 70px 0 90px;
+}
+.section {
+  margin-bottom: 64px;
+}
+.section:last-child {
+  margin-bottom: 0;
+}
+.sectionTitle {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+.sectionText {
+  color: #4a4241;
+  font-size: 1.02rem;
+  line-height: 1.75;
+  max-width: 720px;
+}
+.sectionText p {
+  margin-bottom: 16px;
+}
+
+/* Palmarès (timeline) */
+.timeline {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.tItem {
+  display: flex;
+  gap: 22px;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+}
+.tItem:first-child {
+  border-top: none;
+}
+.tYear {
+  flex: none;
+  width: 70px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--rose);
+}
+.tContent b {
+  display: block;
+  font-size: 1.02rem;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.tContent span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* Valeurs / piliers */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 28px;
+}
+.pillar {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  padding: 26px 24px;
+}
+.pillarIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--cloud);
+  color: var(--rose);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.pillar h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+.pillar p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+/* CTA final */
+.cta {
+  margin-top: 20px;
+  background: linear-gradient(150deg, var(--night), var(--wine));
+  border-radius: 24px;
+  padding: 52px 44px;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.cta::before {
+  content: "";
+  position: absolute;
+  top: -160px;
+  right: -100px;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.32), transparent 62%);
+  pointer-events: none;
+}
+.cta h2 {
+  position: relative;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  margin-bottom: 12px;
+}
+.cta p {
+  position: relative;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.02rem;
+  margin-bottom: 28px;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.ctaBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 15px 32px;
+  border-radius: 999px;
+  background: var(--rose);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.ctaBtn:hover {
+  background: var(--rose-2);
+}
+
+@media (max-width: 860px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .heroPhoto {
+    max-width: 340px;
+  }
+  .pillars {
+    grid-template-columns: 1fr;
+  }
+}

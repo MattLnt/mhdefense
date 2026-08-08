@@ -1,0 +1,264 @@
+/* Page Contact — formulaire + coordonnées (site public clair). */
+
+.page {
+  min-height: 100vh;
+  background: var(--paper);
+}
+.narrow {
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 0 26px;
+}
+
+/* Bandeau */
+.top {
+  position: relative;
+  background: var(--night);
+  color: #fff;
+  padding: 130px 0 60px;
+  overflow: hidden;
+  text-align: center;
+}
+.top::before {
+  content: "";
+  position: absolute;
+  top: -240px;
+  right: -140px;
+  width: 640px;
+  height: 640px;
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.28), transparent 62%);
+  pointer-events: none;
+}
+.topInner {
+  position: relative;
+  z-index: 2;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f0699a;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+.top h1 {
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  margin-bottom: 12px;
+}
+.top h1 span {
+  color: var(--rose-2);
+}
+.top p {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 1.02rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Corps : 2 colonnes */
+.body {
+  padding: 56px 0 80px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* Formulaire */
+.formCard {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  padding: 32px;
+}
+.formCard h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.formCard .lead {
+  color: var(--muted);
+  font-size: 0.94rem;
+  margin-bottom: 24px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+.field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #574c4b;
+}
+.field input,
+.field textarea {
+  padding: 13px 15px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: #fff;
+  transition: border-color 0.2s;
+}
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--rose);
+}
+.field textarea {
+  resize: vertical;
+  min-height: 130px;
+}
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.submit {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 999px;
+  background: var(--rose);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.96rem;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.submit:hover:not(:disabled) {
+  background: var(--rose-2);
+}
+.submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.message {
+  padding: 13px 15px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  margin-bottom: 18px;
+  display: flex;
+  gap: 9px;
+}
+.message svg {
+  flex: none;
+  margin-top: 1px;
+}
+.success {
+  background: #e9f6ef;
+  border: 1px solid #b5e0c8;
+  color: #2e7d5b;
+}
+.error {
+  background: #fdecef;
+  border: 1px solid #f2c2ce;
+  color: #b0234a;
+}
+
+/* Colonne coordonnées */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.infoCard {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-decoration: none;
+  color: inherit;
+  transition: 0.2s;
+}
+.infoCard:hover {
+  border-color: var(--rose);
+  transform: translateX(2px);
+}
+.infoIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--cloud);
+  color: var(--rose);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.infoText b {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.infoText span {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+/* Encart lieu */
+.locationCard {
+  background: linear-gradient(150deg, var(--night), var(--wine));
+  border-radius: 18px;
+  padding: 26px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.locationCard::before {
+  content: "";
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.3), transparent 62%);
+  pointer-events: none;
+}
+.locationCard h3 {
+  position: relative;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.locationCard p {
+  position: relative;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .row2 {
+    grid-template-columns: 1fr;
+  }
+}
