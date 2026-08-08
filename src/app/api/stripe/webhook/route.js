@@ -23,15 +23,20 @@ async function consommerPromo(code) {
  * puis supprime la PendingSignup. Idempotent.
  */
 async function creerCompteDepuisPending(pendingSignupId) {
+  console.log("[webhook] creerCompteDepuisPending — id reçu:", pendingSignupId);
   if (!pendingSignupId) return;
 
   const pending = await prisma.pendingSignup.findUnique({
     where: { id: pendingSignupId },
   });
-  if (!pending) return; // déjà traité ou introuvable
+  if (!pending) {
+    console.log("[webhook] PendingSignup introuvable pour id:", pendingSignupId);
+    return;
+  }
 
   const existing = await prisma.user.findUnique({ where: { email: pending.email } });
   if (existing) {
+    console.log("[webhook] User existe déjà, nettoyage PendingSignup");
     await prisma.pendingSignup.delete({ where: { id: pending.id } }).catch(() => {});
     return;
   }
@@ -69,6 +74,8 @@ async function creerCompteDepuisPending(pendingSignupId) {
 
     await tx.pendingSignup.delete({ where: { id: pending.id } });
   });
+
+  console.log("[webhook] Compte créé avec succès pour:", pending.email);
 }
 
 export async function POST(request) {
@@ -141,25 +148,62 @@ export async function POST(request) {
 
       case "invoice.paid": {
         const invoice = event.data.object;
-        const subId = invoice.subscription;
-        if (!subId) break;
 
-        if (invoice.billing_reason === "subscription_create") {
-          // 1re facture → on crée le compte depuis la PendingSignup
+        // --- LOGS DEBUG : localiser où dahlia range les infos ---
+        console.log("[webhook] invoice.paid — billing_reason:", invoice.billing_reason);
+        console.log("[webhook] invoice.paid — subscription:", invoice.subscription);
+        console.log("[webhook] invoice.paid — parent:", JSON.stringify(invoice.parent)?.slice(0, 300));
+        console.log("[webhook] invoice.paid — lines[0]:", JSON.stringify(invoice.lines?.data?.[0])?.slice(0, 300));
+
+        // Récupération du subId : ancien champ OU nouveau champ parent (dahlia)
+        const subId =
+          invoice.subscription ||
+          invoice.parent?.subscription_details?.subscription ||
+          invoice.lines?.data?.[0]?.parent?.subscription_item_details?.subscription ||
+          null;
+
+        console.log("[webhook] invoice.paid — subId résolu:", subId);
+
+        if (!subId) {
+          console.log("[webhook] invoice.paid — AUCUN subId, on sort");
+          break;
+        }
+
+        // 1re facture → création du compte
+        const isFirst =
+          invoice.billing_reason === "subscription_create" ||
+          invoice.billing_reason === "subscription_cycle" ||
+          !invoice.billing_reason;
+
+        console.log("[webhook] invoice.paid — isFirst:", isFirst);
+
+        if (isFirst) {
           let pendingSignupId = null;
           let promoCode = null;
           try {
             const sub = await stripe.subscriptions.retrieve(subId);
             pendingSignupId = sub.metadata?.pendingSignupId || null;
             promoCode = sub.metadata?.promoCode || null;
+            console.log("[webhook] metadata sub — pendingSignupId:", pendingSignupId, "| promoCode:", promoCode);
           } catch (e) {
             console.error("[webhook] retrieve subscription échoué :", e.message);
           }
 
-          await creerCompteDepuisPending(pendingSignupId);
-          await consommerPromo(promoCode);
+          // Fallback : si pas de compte à créer (renouvellement), on réactive
+          const pendingExists = pendingSignupId
+            ? await prisma.pendingSignup.findUnique({ where: { id: pendingSignupId } })
+            : null;
+
+          if (pendingExists) {
+            await creerCompteDepuisPending(pendingSignupId);
+            await consommerPromo(promoCode);
+          } else {
+            await prisma.subscription.updateMany({
+              where: { stripeSubId: subId },
+              data: { status: "ACTIVE" },
+            });
+          }
         } else {
-          // Renouvellement mensuel → réactivation
           await prisma.subscription.updateMany({
             where: { stripeSubId: subId },
             data: { status: "ACTIVE" },
@@ -170,7 +214,10 @@ export async function POST(request) {
 
       case "invoice.payment_failed": {
         const invoice = event.data.object;
-        const subId = invoice.subscription;
+        const subId =
+          invoice.subscription ||
+          invoice.parent?.subscription_details?.subscription ||
+          null;
         if (!subId) break;
 
         await prisma.subscription.updateMany({
