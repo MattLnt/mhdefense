@@ -120,7 +120,7 @@ export async function POST(request) {
       ],
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.payment_intent"],
+      expand: ["latest_invoice.payment_intent", "latest_invoice.confirmation_secret"],
       metadata: {},
     };
 
@@ -131,31 +131,44 @@ export async function POST(request) {
 
     const subscription = await stripe.subscriptions.create(subscriptionParams);
 
-    // 4. Récupération robuste du clientSecret de la 1re facture.
-    //    Selon la version d'API, payment_intent n'est pas toujours "expandé"
-    //    dans la réponse → on le récupère explicitement au besoin.
-    let clientSecret =
-      subscription.latest_invoice?.payment_intent?.client_secret || null;
+    // 4. Récupération du secret de paiement de la 1re facture.
+    let clientSecret = null;
 
-    if (!clientSecret) {
-      const invoiceId =
-        typeof subscription.latest_invoice === "string"
-          ? subscription.latest_invoice
-          : subscription.latest_invoice?.id;
+    const invoiceId =
+      typeof subscription.latest_invoice === "string"
+        ? subscription.latest_invoice
+        : subscription.latest_invoice?.id;
 
-      if (invoiceId) {
-        const invoice = await stripe.invoices.retrieve(invoiceId, {
-          expand: ["payment_intent"],
+    if (invoiceId) {
+      let invoice = await stripe.invoices.retrieve(invoiceId, {
+        expand: ["payment_intent", "confirmation_secret"],
+      });
+
+      // Si la facture n'est pas finalisée, on la finalise (déclenche le PI)
+      if (invoice.status === "draft") {
+        invoice = await stripe.invoices.finalizeInvoice(invoiceId, {
+          expand: ["payment_intent", "confirmation_secret"],
         });
-        let pi = invoice.payment_intent;
-        if (typeof pi === "string") {
-          pi = await stripe.paymentIntents.retrieve(pi);
-        }
-        clientSecret = pi?.client_secret || null;
       }
-    }
 
-    console.log("[subscription/create] clientSecret présent ?", !!clientSecret);
+      // Piste 1 : PaymentIntent classique
+      let pi = invoice.payment_intent;
+      if (typeof pi === "string") {
+        pi = await stripe.paymentIntents.retrieve(pi);
+      }
+      clientSecret = pi?.client_secret || null;
+
+      // Piste 2 : nouveau champ confirmation_secret (API récente "dahlia")
+      if (!clientSecret && invoice.confirmation_secret?.client_secret) {
+        clientSecret = invoice.confirmation_secret.client_secret;
+      }
+
+      // Debug : structure de l'invoice pour localiser le secret
+      console.log("[subscription/create] invoice.status:", invoice.status);
+      console.log("[subscription/create] payment_intent:", JSON.stringify(invoice.payment_intent)?.slice(0, 120));
+      console.log("[subscription/create] confirmation_secret:", JSON.stringify(invoice.confirmation_secret)?.slice(0, 120));
+      console.log("[subscription/create] clientSecret présent ?", !!clientSecret);
+    }
 
     // 5. Demande d'inscription en attente (compte créé au paiement)
     const passwordHash = await bcrypt.hash(password, 10);
@@ -199,7 +212,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("[subscription/create]", error);
     return NextResponse.json(
-      { error: "Impossible de créer l'abonnement." },
+      { error: "Impossible de préparer l'abonnement." },
       { status: 500 }
     );
   }
