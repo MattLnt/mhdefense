@@ -4,6 +4,22 @@ import { stripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Incrémente le compteur d'utilisation d'un code promo (si présent et existant).
+ * Best-effort : n'interrompt jamais le traitement du webhook.
+ */
+async function consommerPromo(code) {
+  if (!code) return;
+  try {
+    await prisma.promoCode.updateMany({
+      where: { code: code.toUpperCase() },
+      data: { timesRedeemed: { increment: 1 } },
+    });
+  } catch (e) {
+    console.error("[webhook] incrément promo échoué :", e.message);
+  }
+}
+
 export async function POST(request) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -45,6 +61,9 @@ export async function POST(request) {
             data: { status: newStatus, stripePaymentIntentId: intent.id },
           }),
         ]);
+
+        // Code promo éventuel → on incrémente le compteur d'utilisation
+        await consommerPromo(intent.metadata?.promoCode);
         break;
       }
 
@@ -83,6 +102,16 @@ export async function POST(request) {
           where: { stripeSubId: subId },
           data: { status: "ACTIVE" },
         });
+
+        // Code promo : uniquement à la PREMIÈRE facture (pas aux renouvellements)
+        // billing_reason = "subscription_create" pour la 1re facture.
+        if (invoice.billing_reason === "subscription_create") {
+          const code =
+            invoice.metadata?.promoCode ||
+            invoice.subscription_details?.metadata?.promoCode ||
+            null;
+          await consommerPromo(code);
+        }
         break;
       }
 
@@ -112,7 +141,6 @@ export async function POST(request) {
       // Mise à jour d'abonnement (ex. résiliation programmée en fin d'engagement)
       case "customer.subscription.updated": {
         const sub = event.data.object;
-        // Si Stripe a programmé une fin (cancel_at), on la reflète en base
         const cancelAt = sub.cancel_at ? new Date(sub.cancel_at * 1000) : null;
         await prisma.subscription.updateMany({
           where: { stripeSubId: sub.id },

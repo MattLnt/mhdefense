@@ -89,6 +89,12 @@ export default function ReservationPage() {
   const [clientSecret, setClientSecret] = useState(null);
   const [payAmount, setPayAmount] = useState(0);
 
+  // Code promo
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState(null); // { code, discount, newAmount, label }
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState(null);
+
   const [form, setForm] = useState({
     name: "", email: "", phone: "", password: "", p2Name: "", p3Name: "",
   });
@@ -102,14 +108,59 @@ export default function ReservationPage() {
   const prixUnitaire = isAbo ? PRIX_ABO[type][plan][freq] : typeInfo.prixPonctuel;
   const total = isEssai ? 0 : prixUnitaire * nbPersonnes;
 
+  // Total après réduction éventuelle (en euros, pour l'affichage)
+  const totalApresPromo = promo ? Math.round(promo.newAmount / 100) : total;
+
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   function choisir(m) {
     setMode(m);
     setSlots([]);
     setErreur(null);
+    resetPromo();
     if (m === "ESSAI") setType("INDIVIDUEL");
     setStep(1);
+  }
+
+  function resetPromo() {
+    setPromo(null);
+    setPromoInput("");
+    setPromoError(null);
+  }
+
+  // Validation du code promo (aperçu) — le calcul final se refait côté serveur
+  async function appliquerCodePromo() {
+    setPromoError(null);
+    if (!promoInput.trim()) return;
+    setPromoLoading(true);
+    try {
+      const res = await fetch("/api/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promoInput,
+          scope: isAbo ? "ABONNEMENT" : "PONCTUEL",
+          amount: total * 100, // en centimes
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.valid) {
+        setPromo(null);
+        setPromoError(data.error || "Code invalide.");
+        setPromoLoading(false);
+        return;
+      }
+      setPromo({
+        code: data.code,
+        discount: data.discount,
+        newAmount: data.newAmount,
+        label: data.label,
+      });
+      setPromoLoading(false);
+    } catch (e) {
+      setPromoError("Impossible de vérifier le code.");
+      setPromoLoading(false);
+    }
   }
 
   // Paiement ponctuel : hold + PaymentIntent → formulaire carte
@@ -138,7 +189,11 @@ export default function ReservationPage() {
       const checkoutRes = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId: holdData.booking.id, mode: paiement }),
+        body: JSON.stringify({
+          bookingId: holdData.booking.id,
+          mode: paiement,
+          promoCode: promo?.code || null,
+        }),
       });
       const checkoutData = await checkoutRes.json();
       if (!checkoutRes.ok) {
@@ -172,6 +227,7 @@ export default function ReservationPage() {
           sessionType: type,
           planKey: plan,
           frequency: FREQ_ENUM[freq],
+          promoCode: promo?.code || null,
         }),
       });
       const data = await res.json();
@@ -514,13 +570,69 @@ export default function ReservationPage() {
                     <span>Sarrians (84)</span>
                   </div>
 
+                  {/* Ligne réduction si code appliqué */}
+                  {promo && !isEssai && (
+                    <div className={styles.recapRow}>
+                      <span>Code {promo.code}</span>
+                      <span style={{ color: "#2e7d5b", fontWeight: 700 }}>
+                        −{Math.round(promo.discount / 100)} € ({promo.label})
+                      </span>
+                    </div>
+                  )}
+
                   <div className={styles.recapTotal}>
                     <span className={styles.label}>{isAbo ? "Total mensuel" : "Total"}</span>
                     <span className={styles.amount}>
-                      {total} €<span>{isAbo ? " / mois" : isEssai ? "" : " TTC"}</span>
+                      {promo && !isEssai && (
+                        <span style={{ textDecoration: "line-through", opacity: 0.5, fontWeight: 500, marginRight: 8 }}>
+                          {total} €
+                        </span>
+                      )}
+                      {totalApresPromo} €<span>{isAbo ? " / mois" : isEssai ? "" : " TTC"}</span>
                     </span>
                   </div>
                 </div>
+
+                {/* Champ code promo (ponctuel & abonnement, avant le paiement) */}
+                {!isEssai && !clientSecret && (
+                  <div className={styles.promoBox}>
+                    {!promo ? (
+                      <>
+                        <div className={styles.promoRow}>
+                          <input
+                            className={styles.promoInput}
+                            value={promoInput}
+                            onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                            placeholder="Code promo"
+                            maxLength={24}
+                          />
+                          <button
+                            className={styles.promoBtn}
+                            onClick={appliquerCodePromo}
+                            disabled={promoLoading || !promoInput.trim()}
+                            type="button"
+                          >
+                            {promoLoading ? "…" : "Appliquer"}
+                          </button>
+                        </div>
+                        {promoError && <div className={styles.promoError}>{promoError}</div>}
+                      </>
+                    ) : (
+                      <div className={styles.promoApplied}>
+                        <span>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                            <path d="M20 6L9 17l-5-5" />
+                          </svg>
+                          Code <b>{promo.code}</b> appliqué ({promo.label})
+                          {isAbo && " sur le 1ᵉʳ mois"}
+                        </span>
+                        <button className={styles.promoRemove} onClick={resetPromo} type="button">
+                          Retirer
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Mode de paiement (ponctuel uniquement) */}
                 {mode === "PONCTUEL" && !clientSecret && (
@@ -535,7 +647,7 @@ export default function ReservationPage() {
                         <span className={styles.radio} />
                         <div className={styles.optionName}>Comptant</div>
                         <div className={styles.optionDesc}>La totalité maintenant</div>
-                        <div className={styles.optionPrice}>{total} €</div>
+                        <div className={styles.optionPrice}>{totalApresPromo} €</div>
                       </button>
                       <button
                         className={`${styles.option} ${paiement === "ACOMPTE" ? styles.optionOn : ""}`}
@@ -545,8 +657,8 @@ export default function ReservationPage() {
                         <div className={styles.optionName}>Acompte 50 %</div>
                         <div className={styles.optionDesc}>Le solde sur place</div>
                         <div className={styles.optionPrice}>
-                          {Math.round(total / 2)} €
-                          <span> puis {total - Math.round(total / 2)} €</span>
+                          {Math.round(totalApresPromo / 2)} €
+                          <span> puis {totalApresPromo - Math.round(totalApresPromo / 2)} €</span>
                         </div>
                       </button>
                     </div>

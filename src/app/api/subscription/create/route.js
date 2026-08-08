@@ -17,14 +17,55 @@ const LABEL = {
 };
 
 /**
+ * Revalide un code promo (scope ABONNEMENT/ALL) et crée un coupon Stripe
+ * one-time (réduction sur la 1re mensualité). Retourne { promo, couponId }.
+ */
+async function preparerPromo(codeRaw, montantMensuel) {
+  if (!codeRaw?.trim()) return { promo: null, couponId: null };
+
+  const code = codeRaw.trim().toUpperCase();
+  const promo = await prisma.promoCode.findUnique({ where: { code } });
+
+  if (!promo || !promo.active) return { promo: null, couponId: null };
+
+  const now = new Date();
+  if (promo.startsAt && now < promo.startsAt) return { promo: null, couponId: null };
+  if (promo.endsAt && now > promo.endsAt) return { promo: null, couponId: null };
+  if (promo.maxRedemptions != null && promo.timesRedeemed >= promo.maxRedemptions)
+    return { promo: null, couponId: null };
+  if (promo.scope !== "ALL" && promo.scope !== "ABONNEMENT") return { promo: null, couponId: null };
+
+  // Création d'un coupon Stripe one-time (1er mois)
+  let coupon;
+  if (promo.discountType === "PERCENT") {
+    coupon = await stripe.coupons.create({
+      percent_off: promo.discountValue,
+      duration: "once",
+      name: `Code ${promo.code}`,
+    });
+  } else {
+    // FIXED : discountValue en centimes, plafonné au montant mensuel
+    const amountOff = Math.min(promo.discountValue, montantMensuel);
+    coupon = await stripe.coupons.create({
+      amount_off: amountOff,
+      currency: "eur",
+      duration: "once",
+      name: `Code ${promo.code}`,
+    });
+  }
+
+  return { promo, couponId: coupon.id };
+}
+
+/**
  * POST /api/subscription/create
- * Body : { name, email, phone, password, sessionType, planKey, frequency }
+ * Body : { name, email, phone, password, sessionType, planKey, frequency, promoCode? }
  * Crée le compte + l'abonnement Stripe, renvoie le clientSecret
  * pour régler la première mensualité.
  */
 export async function POST(request) {
   try {
-    const { name, email, phone, password, sessionType, planKey, frequency } =
+    const { name, email, phone, password, sessionType, planKey, frequency, promoCode } =
       await request.json();
 
     // Validation
@@ -66,6 +107,9 @@ export async function POST(request) {
     const nbPersonnes = PERSONNES[sessionType];
     const montantMensuel = plan.price * nbPersonnes; // en centimes
 
+    // Code promo (coupon Stripe one-time) — revalidé côté serveur
+    const { promo, couponId } = await preparerPromo(promoCode, montantMensuel);
+
     // 1. Création du compte client
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
@@ -86,7 +130,7 @@ export async function POST(request) {
     });
 
     // 3. Abonnement Stripe récurrent (prix à la volée)
-    const subscription = await stripe.subscriptions.create({
+    const subscriptionParams = {
       customer: customer.id,
       items: [
         {
@@ -98,11 +142,19 @@ export async function POST(request) {
           },
         },
       ],
-      payment_behavior: "default_incomplete", // on encaisse via le formulaire carte
+      payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
       expand: ["latest_invoice.payment_intent"],
       metadata: { userId: user.id },
-    });
+    };
+
+    // Coupon promo (réduction 1er mois) + métadonnée pour l'incrément au webhook
+    if (couponId) {
+      subscriptionParams.discounts = [{ coupon: couponId }];
+      subscriptionParams.metadata.promoCode = promo.code;
+    }
+
+    const subscription = await stripe.subscriptions.create(subscriptionParams);
 
     const clientSecret =
       subscription.latest_invoice?.payment_intent?.client_secret;
@@ -127,7 +179,6 @@ export async function POST(request) {
       },
     });
 
-    // On garde l'id Stripe customer sur le user aussi
     await prisma.user.update({
       where: { id: user.id },
       data: { stripeCustomerId: customer.id },
@@ -136,6 +187,7 @@ export async function POST(request) {
     return NextResponse.json({
       clientSecret,
       amount: montantMensuel,
+      promoApplied: promo ? promo.code : null,
     });
   } catch (error) {
     console.error("[subscription/create]", error);

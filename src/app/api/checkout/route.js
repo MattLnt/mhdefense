@@ -17,13 +17,41 @@ const LABEL = {
 };
 
 /**
+ * Revalide un code promo côté serveur et renvoie la réduction (centimes).
+ * Retourne { promo, discount } ou lève une erreur explicite.
+ */
+async function appliquerPromo(codeRaw, total) {
+  if (!codeRaw?.trim()) return { promo: null, discount: 0 };
+
+  const code = codeRaw.trim().toUpperCase();
+  const promo = await prisma.promoCode.findUnique({ where: { code } });
+
+  if (!promo || !promo.active) return { promo: null, discount: 0 };
+
+  const now = new Date();
+  if (promo.startsAt && now < promo.startsAt) return { promo: null, discount: 0 };
+  if (promo.endsAt && now > promo.endsAt) return { promo: null, discount: 0 };
+  if (promo.maxRedemptions != null && promo.timesRedeemed >= promo.maxRedemptions)
+    return { promo: null, discount: 0 };
+  if (promo.scope !== "ALL" && promo.scope !== "PONCTUEL") return { promo: null, discount: 0 };
+
+  let discount =
+    promo.discountType === "PERCENT"
+      ? Math.round((total * promo.discountValue) / 100)
+      : promo.discountValue;
+  discount = Math.min(discount, total);
+
+  return { promo, discount };
+}
+
+/**
  * POST /api/checkout
- * Body : { bookingId, mode }  (mode = "COMPTANT" | "ACOMPTE")
+ * Body : { bookingId, mode, promoCode? }  (mode = "COMPTANT" | "ACOMPTE")
  * Crée un PaymentIntent (cartes uniquement) et renvoie le clientSecret.
  */
 export async function POST(request) {
   try {
-    const { bookingId, mode } = await request.json();
+    const { bookingId, mode, promoCode } = await request.json();
 
     if (!bookingId || !mode) {
       return NextResponse.json({ error: "Paramètres manquants." }, { status: 400 });
@@ -49,17 +77,26 @@ export async function POST(request) {
       return NextResponse.json({ error: "Tarif indisponible." }, { status: 500 });
     }
 
-    const total = unitPrice * booking.participantsCount;
+    const totalBrut = unitPrice * booking.participantsCount;
+
+    // Code promo revalidé côté serveur
+    const { promo, discount } = await appliquerPromo(promoCode, totalBrut);
+    const total = Math.max(0, totalBrut - discount);
+
     const amountOnline = mode === "ACOMPTE" ? Math.round(total / 2) : total;
     const amountOnSite = total - amountOnline;
+
+    // Métadonnées : bookingId + code promo (pour incrément au webhook)
+    const metadata = { bookingId: booking.id };
+    if (promo) metadata.promoCode = promo.code;
 
     // PaymentIntent : cartes uniquement
     const intent = await stripe.paymentIntents.create({
       amount: amountOnline,
       currency: "eur",
       payment_method_types: ["card"],
-      description: `${LABEL[booking.sessionType]} — ${mode === "ACOMPTE" ? "acompte 50 %" : "comptant"}`,
-      metadata: { bookingId: booking.id },
+      description: `${LABEL[booking.sessionType]} — ${mode === "ACOMPTE" ? "acompte 50 %" : "comptant"}${promo ? ` (code ${promo.code})` : ""}`,
+      metadata,
     });
 
     // Payment en base (PENDING) rattaché au PaymentIntent
@@ -87,6 +124,9 @@ export async function POST(request) {
     return NextResponse.json({
       clientSecret: intent.client_secret,
       amount: amountOnline,
+      total,
+      discount,
+      promoApplied: promo ? promo.code : null,
     });
   } catch (error) {
     console.error("[checkout]", error);
