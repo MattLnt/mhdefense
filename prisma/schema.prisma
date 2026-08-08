@@ -99,6 +99,20 @@ model User {
   updatedAt        DateTime      @updatedAt
 }
 
+// Jeton de réinitialisation de mot de passe (usage unique, expirable).
+// Le token stocké est un hash SHA-256 ; l'original est envoyé par email.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 // ========================================================
 //  DISPONIBILITÉS
 // ========================================================
