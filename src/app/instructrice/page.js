@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import Header from "@/components/Header";
+import SiteLayout from "@/components/SiteLayout";
 import styles from "./Instructrice.module.css";
 
 const PALMARES = [
-  { year: "2019", title: "Championne du monde de karaté", detail: "Titre mondial en catégorie kumite" },
-  { year: "2017", title: "Championne d'Europe", detail: "Médaille d'or, championnats européens" },
-  { year: "2015", title: "Championne de France", detail: "Triple championne nationale consécutive" },
-  { year: "2012", title: "Ceinture noire 3ᵉ dan", detail: "Obtention du grade et début de l'enseignement" },
+  { year: "Monde", title: "Championne du Monde", detail: "Consécration au plus haut niveau international" },
+  { year: "Europe", title: "Médaillée aux Championnats d'Europe", detail: "Podium continental en karaté" },
+  { year: "France", title: "~10× Championne de France", detail: "Une dizaine de titres nationaux" },
+  { year: "Diplôme", title: "Instructeur Fédéral en arts martiaux", detail: "Diplôme fédéral — enseignement tous niveaux et compétiteurs" },
 ];
 
 const PILIERS = [
   {
-    title: "Techniques réalistes",
-    text: "Des gestes simples, efficaces et adaptés aux situations réelles du quotidien — pas de chorégraphie, du concret.",
+    title: "Concrète",
+    text: "Une self-défense pensée pour les situations réelles : des gestes simples, directs et efficaces, loin de toute chorégraphie.",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -22,20 +22,20 @@ const PILIERS = [
     ),
   },
   {
-    title: "Bienveillance",
-    text: "Un cadre 100 % féminin, sans jugement, où chacune progresse à son rythme et en confiance.",
+    title: "Efficace",
+    text: "Fruit de 17 ans de pratique au plus haut niveau : des techniques éprouvées, transmises avec exigence et pédagogie.",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z" />
+        <path d="M13 2L3 14h7l-1 8 10-12h-7z" />
       </svg>
     ),
   },
   {
-    title: "Confiance en soi",
-    text: "Au-delà des techniques, on travaille la posture, la voix et le mental pour se sentir forte partout.",
+    title: "Accessible à tous",
+    text: "Femmes, adolescents, enfants, débutants ou confirmés : chacun progresse à son rythme, en confiance et en bienveillance.",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M12 2l2.4 6.9H21l-5.3 4 2 6.9-5.7-4.2L6.3 19.8l2-6.9L3 8.9h6.6z" />
+        <path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z" />
       </svg>
     ),
   },
@@ -43,8 +43,7 @@ const PILIERS = [
 
 export default function InstructricePage() {
   return (
-    <>
-      <Header />
+    <SiteLayout>
       <main className={styles.page}>
         {/* Hero */}
         <section className={styles.hero}>
@@ -60,27 +59,27 @@ export default function InstructricePage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2l2.4 6.9H21l-5.3 4 2 6.9-5.7-4.2L6.3 19.8l2-6.9L3 8.9h6.6z" />
                 </svg>
-                Championne du monde de karaté
+                Championne du Monde de karaté
               </div>
               <h1>Marie Hervas Diaz,<br /><span>votre instructrice</span></h1>
               <div className={styles.role}>Fondatrice de MH Defense · Sarrians (84)</div>
               <p className={styles.heroText}>
-                Après une carrière au plus haut niveau international, j'ai décidé de
-                transmettre mon expérience aux femmes qui veulent se sentir en sécurité
-                au quotidien. Mon approche : des techniques simples, efficaces, et un
-                accompagnement bienveillant, quel que soit votre niveau de départ.
+                Karatéka depuis l'âge de 3 ans, je compte près de 17 années
+                d'expérience dans les arts martiaux et un parcours au plus haut
+                niveau. Aujourd'hui, je mets cette expérience au service d'une
+                self-défense concrète, efficace et accessible à tous.
               </p>
               <div className={styles.heroStats}>
                 <div className={styles.heroStat}>
-                  <b>15+</b>
-                  <span>ans d'expérience</span>
+                  <b>17 ans</b>
+                  <span>d'expérience</span>
                 </div>
                 <div className={styles.heroStat}>
-                  <b>500+</b>
-                  <span>femmes formées</span>
+                  <b>~10×</b>
+                  <span>Championne de France</span>
                 </div>
                 <div className={styles.heroStat}>
-                  <b>1</b>
+                  <b>Monde</b>
                   <span>titre mondial</span>
                 </div>
               </div>
@@ -95,28 +94,28 @@ export default function InstructricePage() {
               <div className={styles.sectionTitle}>Mon parcours</div>
               <div className={styles.sectionText}>
                 <p>
-                  J'ai commencé le karaté à l'âge de 8 ans, sans imaginer que cette
-                  discipline deviendrait toute ma vie. Des tatamis de mon club local
-                  jusqu'aux podiums internationaux, j'ai appris que la vraie force ne
-                  se mesure pas seulement en compétition, mais dans la confiance qu'on
-                  développe en soi.
+                  Karatéka depuis l'âge de 3 ans, j'ai grandi sur les tatamis et
+                  consacré près de 17 années aux arts martiaux, avec un parcours
+                  au plus haut niveau : une dizaine de fois Championne de France,
+                  médaillée aux Championnats d'Europe et Championne du Monde.
                 </p>
                 <p>
-                  Aujourd'hui, je mets cette expérience au service des femmes. Trop
-                  d'entre nous se sentent vulnérables dans certaines situations. Mon
-                  objectif est simple : vous donner les outils concrets pour vous
-                  protéger, et surtout la confiance pour ne plus jamais vous sentir
-                  démunie.
+                  Professeure de karaté tous niveaux et auprès de compétiteurs de
+                  haut niveau, j'ai également encadré des stages régionaux et
+                  interrégionaux. Titulaire du Diplôme d'Instructeur Fédéral en
+                  arts martiaux, je mets aujourd'hui toute cette expérience au
+                  service d'une self-défense concrète, efficace et accessible à
+                  tous.
                 </p>
               </div>
             </div>
 
             {/* Palmarès */}
             <div className={styles.section}>
-              <div className={styles.sectionTitle}>Palmarès</div>
+              <div className={styles.sectionTitle}>Parcours & distinctions</div>
               <div className={styles.timeline}>
                 {PALMARES.map((p) => (
-                  <div key={p.year} className={styles.tItem}>
+                  <div key={p.title} className={styles.tItem}>
                     <div className={styles.tYear}>{p.year}</div>
                     <div className={styles.tContent}>
                       <b>{p.title}</b>
@@ -131,7 +130,7 @@ export default function InstructricePage() {
             <div className={styles.section}>
               <div className={styles.sectionTitle}>Ma méthode</div>
               <div className={styles.sectionText}>
-                Trois principes guident chacun de mes cours.
+                Une self-défense guidée par trois principes.
               </div>
               <div className={styles.pillars}>
                 {PILIERS.map((p) => (
@@ -161,6 +160,6 @@ export default function InstructricePage() {
           </div>
         </section>
       </main>
-    </>
+    </SiteLayout>
   );
 }

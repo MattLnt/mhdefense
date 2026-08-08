@@ -15,7 +15,7 @@
   position: relative;
   background: var(--night);
   color: #fff;
-  padding: 118px 0 46px;
+  padding: 180px 0 100px;
   overflow: hidden;
 }
 .top::before {

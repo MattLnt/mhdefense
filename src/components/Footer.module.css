@@ -1,0 +1,168 @@
+/* Footer sombre (fond nuit) — cohérent avec le hero. */
+
+.footer {
+  background: var(--night);
+  color: rgba(255, 255, 255, 0.7);
+  position: relative;
+  overflow: hidden;
+}
+.footer::before {
+  content: "";
+  position: absolute;
+  bottom: -200px;
+  left: -120px;
+  width: 560px;
+  height: 560px;
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.14), transparent 62%);
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 64px 26px 0;
+}
+
+/* Grille principale */
+.grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+  gap: 40px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Colonne marque */
+.brand img {
+  height: 46px;
+  width: auto;
+  margin-bottom: 18px;
+}
+.brandText {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.6);
+  max-width: 300px;
+  margin-bottom: 20px;
+}
+.socials {
+  display: flex;
+  gap: 10px;
+}
+.social {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: 0.2s;
+}
+.social:hover {
+  background: var(--rose);
+  border-color: var(--rose);
+  transform: translateY(-2px);
+}
+
+/* Colonnes de liens */
+.col h4 {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+.col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.col a {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.col a:hover {
+  color: var(--rose-2);
+}
+
+/* Colonne contact */
+.contact {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.contactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.62);
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.contactItem:hover {
+  color: #fff;
+}
+.contactItem svg {
+  flex: none;
+  color: var(--rose-2);
+  margin-top: 2px;
+}
+
+/* Barre du bas */
+.bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 0 30px;
+  flex-wrap: wrap;
+}
+.copy {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+.legal {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.legal a {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.legal a:hover {
+  color: #fff;
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .brand {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 540px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

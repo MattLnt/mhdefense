@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Header from "@/components/Header";
+import SiteLayout from "@/components/SiteLayout";
 import styles from "./Contact.module.css";
 
 export default function ContactPage() {
@@ -40,8 +40,7 @@ export default function ContactPage() {
   }
 
   return (
-    <>
-      <Header />
+    <SiteLayout>
       <main className={styles.page}>
         {/* Bandeau */}
         <section className={styles.top}>
@@ -183,6 +182,6 @@ export default function ContactPage() {
           </div>
         </section>
       </main>
-    </>
+    </SiteLayout>
   );
 }

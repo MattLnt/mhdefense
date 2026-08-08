@@ -5,8 +5,6 @@
   background: var(--night);
   color: #fff;
   overflow: hidden;
-  border-bottom-left-radius: var(--r-lg);
-  border-bottom-right-radius: var(--r-lg);
 }
 
 /* Halos lumineux */

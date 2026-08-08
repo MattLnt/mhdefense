@@ -1,0 +1,119 @@
+/* Section CTA finale de la home : fond clair + grand encart sombre dégradé.
+   Fait la transition entre la section Abonnements (sombre) et le footer (sombre). */
+
+.section {
+  background: var(--paper);
+  padding: 80px 24px;
+}
+
+.card {
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(140deg, var(--night), var(--wine));
+  border-radius: 28px;
+  padding: 64px 48px;
+  text-align: center;
+  color: #fff;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  top: -160px;
+  right: -80px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(240, 105, 154, 0.34), transparent 60%);
+  pointer-events: none;
+}
+.card::after {
+  content: "";
+  position: absolute;
+  bottom: -180px;
+  left: -100px;
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, rgba(110, 42, 59, 0.5), transparent 62%);
+  pointer-events: none;
+}
+
+.tag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--rose-2);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  position: relative;
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+  margin-bottom: 14px;
+  line-height: 1.1;
+}
+.card h2 span {
+  color: var(--rose-2);
+}
+.card p {
+  position: relative;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.05rem;
+  max-width: 520px;
+  margin: 0 auto 32px;
+}
+
+.btns {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.btnRose {
+  background: var(--rose);
+  color: #fff;
+  padding: 15px 30px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s, transform 0.2s;
+}
+.btnRose:hover {
+  background: var(--rose-2);
+  transform: translateY(-2px);
+}
+.btnGhost {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  padding: 15px 30px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.btnGhost:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 620px) {
+  .section {
+    padding: 56px 20px;
+  }
+  .card {
+    padding: 48px 28px;
+  }
+}

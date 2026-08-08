@@ -48,19 +48,6 @@ export default function Hero() {
               priority
             />
           </div>
-
-          <div className={`${styles.pill} ${styles.pillTop}`}>
-            <span className={styles.pdot} style={{ background: "#E7B84E" }} />
-            Championne du monde
-          </div>
-          <div className={`${styles.pill} ${styles.pillMid}`}>
-            <span className={styles.pdot} style={{ background: "var(--rose)" }} />
-            Coaching 100 % féminin
-          </div>
-          <div className={`${styles.pill} ${styles.pillBottom}`}>
-            <span className={styles.pdot} style={{ background: "#5BAE8E" }} />
-            Confiance & réflexes
-          </div>
         </div>
       </div>
     </section>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Header from "@/components/Header";
+import SiteLayout from "@/components/SiteLayout";
+import TrialBanner from "@/components/TrialBanner";
 import styles from "./Tarifs.module.css";
 
 const TYPES = [
@@ -50,8 +51,7 @@ export default function TarifsPage() {
   const euro = (cents) => Math.round((cents || 0) / 100);
 
   return (
-    <>
-      <Header />
+    <SiteLayout>
       <main className={styles.page}>
         {/* Bandeau */}
         <section className={styles.top}>
@@ -69,6 +69,8 @@ export default function TarifsPage() {
             </p>
           </div>
         </section>
+
+        <TrialBanner variant="rose" />
 
         <section className={styles.body}>
           <div className={styles.narrow}>
@@ -174,18 +176,11 @@ export default function TarifsPage() {
                     );
                   })}
                 </div>
-
-                <div className={styles.footnote}>
-                  Première fois ? La séance d'essai est offerte.{" "}
-                  <Link href="/reservation" style={{ color: "var(--rose)", fontWeight: 600 }}>
-                    Réservez-la ici →
-                  </Link>
-                </div>
               </>
             )}
           </div>
         </section>
       </main>
-    </>
+    </SiteLayout>
   );
 }
