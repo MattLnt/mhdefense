@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { resend } from "@/lib/resend";
+import { emailConfirmationReservation } from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
+
+const FROM = "MH Defense <contact@mh-defense.com>";
 
 /**
  * POST /api/booking/essai
@@ -31,7 +35,6 @@ export async function POST(request) {
     const normalizedEmail = email.trim().toLowerCase();
 
     // Règle : un seul essai gratuit par email.
-    // On vérifie côté guest (guestEmail) ET côté compte (user.email).
     const dejaEssai = await prisma.booking.findFirst({
       where: {
         isFreeTrial: true,
@@ -54,8 +57,6 @@ export async function POST(request) {
     }
 
     // Création directe en CONFIRMED (pas de paiement).
-    // Le créneau est protégé par l'index unique partiel : si quelqu'un
-    // vient de le prendre, P2002 → 409.
     const booking = await prisma.booking.create({
       data: {
         startsAt: start,
@@ -70,6 +71,33 @@ export async function POST(request) {
       },
       select: { id: true },
     });
+
+    // Email de confirmation (best-effort : n'interrompt pas si échec)
+    try {
+      const dateHeure = new Intl.DateTimeFormat("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(start);
+
+      await resend.emails.send({
+        from: FROM,
+        to: normalizedEmail,
+        subject: "Votre séance d'essai est confirmée — MH Defense",
+        html: emailConfirmationReservation({
+          name: name.trim(),
+          formule: "Séance d'essai offerte",
+          dateHeure,
+          duree: "1 heure",
+          lieu: "Sarrians (84)",
+          isEssai: true,
+        }),
+      });
+    } catch (mailErr) {
+      console.error("[booking/essai] email confirmation échoué :", mailErr);
+    }
 
     return NextResponse.json({ booking });
   } catch (error) {

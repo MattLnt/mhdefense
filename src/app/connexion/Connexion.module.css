@@ -186,7 +186,8 @@
   text-decoration: none;
 }
 .forgot:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  color: #f0699a;
 }
 .field.withForgot label {
   margin-bottom: 9px;

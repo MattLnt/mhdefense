@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { resend } from "@/lib/resend";
+import { emailContact } from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -47,22 +48,12 @@ export async function POST(request) {
     const cleanPhone = phone?.trim() || "Non renseigné";
     const cleanMessage = message.trim();
 
-    // Email HTML simple et lisible
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a1414;">
-        <div style="background: #170A11; color: #fff; padding: 22px 26px; border-radius: 14px 14px 0 0;">
-          <h2 style="margin: 0; font-size: 18px;">Nouveau message — MH Defense</h2>
-        </div>
-        <div style="border: 1px solid #ece4e3; border-top: none; padding: 26px; border-radius: 0 0 14px 14px;">
-          <p style="margin: 0 0 14px;"><strong>Nom :</strong> ${cleanName}</p>
-          <p style="margin: 0 0 14px;"><strong>Email :</strong> <a href="mailto:${cleanEmail}">${cleanEmail}</a></p>
-          <p style="margin: 0 0 14px;"><strong>Téléphone :</strong> ${cleanPhone}</p>
-          <hr style="border: none; border-top: 1px solid #ece4e3; margin: 18px 0;" />
-          <p style="margin: 0 0 8px;"><strong>Message :</strong></p>
-          <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">${cleanMessage}</p>
-        </div>
-      </div>
-    `;
+    const html = emailContact({
+      fromName: cleanName,
+      fromEmail: cleanEmail,
+      fromPhone: cleanPhone,
+      message: cleanMessage,
+    });
 
     const { error } = await resend.emails.send({
       from: `MH Defense <${from}>`,

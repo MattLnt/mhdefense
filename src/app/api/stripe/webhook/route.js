@@ -1,10 +1,29 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { resend } from "@/lib/resend";
+import {
+  emailConfirmationReservation,
+  emailBienvenueAbonnement,
+} from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
 const QUOTA = { ONCE: 1, TWICE: 2 };
+const FROM = "MH Defense <contact@mh-defense.com>";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://www.mh-defense.com";
+
+const LABEL_SESSION = {
+  INDIVIDUEL: "Séance individuelle",
+  DUO: "Séance duo",
+  GROUPE: "Séance petit groupe",
+};
+
+const LABEL_ABO = {
+  INDIVIDUEL: "Abonnement individuel",
+  DUO: "Abonnement duo",
+  GROUPE: "Abonnement petit groupe",
+};
 
 async function consommerPromo(code) {
   if (!code) return;
@@ -19,8 +38,80 @@ async function consommerPromo(code) {
 }
 
 /**
+ * Envoie l'email de confirmation d'une réservation ponctuelle payée.
+ * Best-effort : ne lève jamais.
+ */
+async function envoyerConfirmationPonctuel(bookingId) {
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { user: true },
+    });
+    if (!booking) return;
+
+    const email = booking.guestEmail || booking.user?.email;
+    const nom = booking.guestName || booking.user?.name || "";
+    if (!email) return;
+
+    const dateHeure = new Intl.DateTimeFormat("fr-FR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(booking.startsAt));
+
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: "Votre réservation est confirmée — MH Defense",
+      html: emailConfirmationReservation({
+        name: nom,
+        formule: LABEL_SESSION[booking.sessionType] || "Séance",
+        dateHeure,
+        duree: "1 heure",
+        lieu: "Sarrians (84)",
+        isEssai: false,
+      }),
+    });
+  } catch (e) {
+    console.error("[webhook] email confirmation ponctuel échoué :", e.message);
+  }
+}
+
+/**
+ * Envoie l'email de bienvenue après création d'un abonnement.
+ * Best-effort : ne lève jamais.
+ */
+async function envoyerBienvenueAbonnement({ email, name, sessionType, engagementMonths }) {
+  try {
+    if (!email) return;
+
+    const engagement =
+      engagementMonths === 1
+        ? "1 mois"
+        : `${engagementMonths} mois`;
+
+    await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: "Bienvenue chez MH Defense 🥋",
+      html: emailBienvenueAbonnement({
+        name: name || "",
+        formule: LABEL_ABO[sessionType] || "Abonnement",
+        engagement,
+        espaceUrl: `${BASE_URL}/compte`,
+      }),
+    });
+  } catch (e) {
+    console.error("[webhook] email bienvenue échoué :", e.message);
+  }
+}
+
+/**
  * Crée le vrai compte + l'abonnement à partir d'une PendingSignup,
  * puis supprime la PendingSignup. Idempotent.
+ * Envoie l'email de bienvenue après création.
  */
 async function creerCompteDepuisPending(pendingSignupId) {
   if (!pendingSignupId) return;
@@ -69,6 +160,14 @@ async function creerCompteDepuisPending(pendingSignupId) {
 
     await tx.pendingSignup.delete({ where: { id: pending.id } });
   });
+
+  // Email de bienvenue (après la transaction, best-effort)
+  await envoyerBienvenueAbonnement({
+    email: pending.email,
+    name: pending.name,
+    sessionType: pending.sessionType,
+    engagementMonths: pending.engagementMonths,
+  });
 }
 
 export async function POST(request) {
@@ -113,6 +212,7 @@ export async function POST(request) {
         ]);
 
         await consommerPromo(intent.metadata?.promoCode);
+        await envoyerConfirmationPonctuel(bookingId);
         break;
       }
 
@@ -142,7 +242,6 @@ export async function POST(request) {
       case "invoice.paid": {
         const invoice = event.data.object;
 
-        // Résolution du subId : ancien champ OU nouveau champ parent (dahlia)
         const subId =
           invoice.subscription ||
           invoice.parent?.subscription_details?.subscription ||
@@ -151,7 +250,6 @@ export async function POST(request) {
 
         if (!subId) break;
 
-        // On lit les métadonnées de l'abonnement
         let pendingSignupId = null;
         let promoCode = null;
         try {
@@ -162,8 +260,6 @@ export async function POST(request) {
           console.error("[webhook] retrieve subscription échoué :", e.message);
         }
 
-        // Si une PendingSignup existe → 1re facture, on crée le compte.
-        // Sinon → renouvellement, on réactive l'abonnement existant.
         const pendingExists = pendingSignupId
           ? await prisma.pendingSignup.findUnique({ where: { id: pendingSignupId } })
           : null;
