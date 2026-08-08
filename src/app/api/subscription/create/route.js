@@ -131,7 +131,33 @@ export async function POST(request) {
 
     const subscription = await stripe.subscriptions.create(subscriptionParams);
 
-    // 4. Demande d'inscription en attente (compte créé au paiement)
+    // 4. Récupération robuste du clientSecret de la 1re facture.
+    //    Selon la version d'API, payment_intent n'est pas toujours "expandé"
+    //    dans la réponse → on le récupère explicitement au besoin.
+    let clientSecret =
+      subscription.latest_invoice?.payment_intent?.client_secret || null;
+
+    if (!clientSecret) {
+      const invoiceId =
+        typeof subscription.latest_invoice === "string"
+          ? subscription.latest_invoice
+          : subscription.latest_invoice?.id;
+
+      if (invoiceId) {
+        const invoice = await stripe.invoices.retrieve(invoiceId, {
+          expand: ["payment_intent"],
+        });
+        let pi = invoice.payment_intent;
+        if (typeof pi === "string") {
+          pi = await stripe.paymentIntents.retrieve(pi);
+        }
+        clientSecret = pi?.client_secret || null;
+      }
+    }
+
+    console.log("[subscription/create] clientSecret présent ?", !!clientSecret);
+
+    // 5. Demande d'inscription en attente (compte créé au paiement)
     const passwordHash = await bcrypt.hash(password, 10);
     const pending = await prisma.pendingSignup.create({
       data: {
@@ -150,7 +176,7 @@ export async function POST(request) {
       },
     });
 
-    // 5. On rattache l'id de la PendingSignup à l'abonnement Stripe
+    // 6. On rattache l'id de la PendingSignup à l'abonnement Stripe
     await stripe.subscriptions.update(subscription.id, {
       metadata: {
         ...(subscription.metadata || {}),
@@ -158,8 +184,12 @@ export async function POST(request) {
       },
     });
 
-    const clientSecret =
-      subscription.latest_invoice?.payment_intent?.client_secret;
+    if (!clientSecret) {
+      return NextResponse.json(
+        { error: "Le paiement n'a pas pu être initialisé. Réessayez." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       clientSecret,

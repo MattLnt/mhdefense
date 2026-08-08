@@ -6,10 +6,6 @@ export const dynamic = "force-dynamic";
 
 const QUOTA = { ONCE: 1, TWICE: 2 };
 
-/**
- * Incrémente le compteur d'utilisation d'un code promo (si présent).
- * Best-effort : n'interrompt jamais le traitement du webhook.
- */
 async function consommerPromo(code) {
   if (!code) return;
   try {
@@ -24,19 +20,16 @@ async function consommerPromo(code) {
 
 /**
  * Crée le vrai compte + l'abonnement à partir d'une PendingSignup,
- * puis supprime la PendingSignup. Idempotent : si le compte existe déjà
- * (webhook rejoué), ne fait rien.
+ * puis supprime la PendingSignup. Idempotent.
  */
-async function creerCompteDepuisPending(pendingSignupId, subId) {
+async function creerCompteDepuisPending(pendingSignupId) {
   if (!pendingSignupId) return;
 
   const pending = await prisma.pendingSignup.findUnique({
     where: { id: pendingSignupId },
   });
-  // Déjà traité (webhook rejoué) ou introuvable → rien à faire
-  if (!pending) return;
+  if (!pending) return; // déjà traité ou introuvable
 
-  // Sécurité : si un user existe déjà avec cet email, on nettoie et on sort
   const existing = await prisma.user.findUnique({ where: { email: pending.email } });
   if (existing) {
     await prisma.pendingSignup.delete({ where: { id: pending.id } }).catch(() => {});
@@ -47,7 +40,6 @@ async function creerCompteDepuisPending(pendingSignupId, subId) {
   const engagementEndsAt = new Date(now);
   engagementEndsAt.setMonth(engagementEndsAt.getMonth() + pending.engagementMonths);
 
-  // Création atomique : User + Subscription, puis suppression de la PendingSignup
   await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
@@ -99,11 +91,10 @@ export async function POST(request) {
     switch (event.type) {
       /* ---------- PONCTUEL ---------- */
 
-      // Paiement carte ponctuel validé
       case "payment_intent.succeeded": {
         const intent = event.data.object;
         const bookingId = intent.metadata?.bookingId;
-        if (!bookingId) break; // (les PaymentIntents d'abonnement n'ont pas ce metadata)
+        if (!bookingId) break;
 
         const payment = await prisma.payment.findUnique({ where: { bookingId } });
         if (!payment) break;
@@ -125,7 +116,6 @@ export async function POST(request) {
         break;
       }
 
-      // Paiement ponctuel échoué → libère le créneau
       case "payment_intent.payment_failed": {
         const intent = event.data.object;
         const bookingId = intent.metadata?.bookingId;
@@ -149,15 +139,13 @@ export async function POST(request) {
 
       /* ---------- ABONNEMENT ---------- */
 
-      // Facture payée (1re mensualité ET renouvellements mensuels)
       case "invoice.paid": {
         const invoice = event.data.object;
         const subId = invoice.subscription;
         if (!subId) break;
 
-        // 1re facture → on crée le compte + l'abonnement depuis la PendingSignup
         if (invoice.billing_reason === "subscription_create") {
-          // On récupère l'abonnement pour lire ses métadonnées
+          // 1re facture → on crée le compte depuis la PendingSignup
           let pendingSignupId = null;
           let promoCode = null;
           try {
@@ -168,10 +156,10 @@ export async function POST(request) {
             console.error("[webhook] retrieve subscription échoué :", e.message);
           }
 
-          await creerCompteDepuisPending(pendingSignupId, subId);
+          await creerCompteDepuisPending(pendingSignupId);
           await consommerPromo(promoCode);
         } else {
-          // Renouvellement mensuel → on (ré)active l'abonnement existant
+          // Renouvellement mensuel → réactivation
           await prisma.subscription.updateMany({
             where: { stripeSubId: subId },
             data: { status: "ACTIVE" },
@@ -180,7 +168,6 @@ export async function POST(request) {
         break;
       }
 
-      // Échec de prélèvement mensuel
       case "invoice.payment_failed": {
         const invoice = event.data.object;
         const subId = invoice.subscription;
@@ -193,7 +180,6 @@ export async function POST(request) {
         break;
       }
 
-      // Abonnement résilié (fin d'engagement atteinte, ou annulation)
       case "customer.subscription.deleted": {
         const sub = event.data.object;
         await prisma.subscription.updateMany({
@@ -203,7 +189,6 @@ export async function POST(request) {
         break;
       }
 
-      // Mise à jour d'abonnement (ex. résiliation programmée en fin d'engagement)
       case "customer.subscription.updated": {
         const sub = event.data.object;
         const cancelAt = sub.cancel_at ? new Date(sub.cancel_at * 1000) : null;
