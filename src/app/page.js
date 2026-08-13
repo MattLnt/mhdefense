@@ -11,7 +11,7 @@ export default function Home() {
     <SiteLayout>
       <main>
         <Hero />
-        <TrialBanner variant="dark" />
+        <TrialBanner variant="dark" href="/reservation?mode=ESSAI" />
         <Audience />
         <Abonnements />
         <HomeCta />
