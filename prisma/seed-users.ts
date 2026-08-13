@@ -8,8 +8,8 @@ const prisma = new PrismaClient({ adapter });
 
 // ─── Comptes de test (modifie librement) ──────────────────────
 const ADMIN = {
-  email: "admin@mhdefense.fr",
-  password: "admin1234",
+  email: "contact@mh-defense.com",
+  password: "!@#123MH!@#456Defense",
   name: "Admin MH",
   phone: "0651001401",
 };

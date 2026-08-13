@@ -11,9 +11,8 @@ export default function Home() {
     <SiteLayout>
       <main>
         <Hero />
-        <TrialBanner variant="rose" />
+        <TrialBanner variant="dark" />
         <Audience />
-        <Formules />
         <Abonnements />
         <HomeCta />
       </main>
