@@ -8,7 +8,6 @@ import styles from "./Header.module.css";
 const NAV = [
   { label: "Accueil", href: "/" },
   { label: "Formules", href: "/#formules" },
-  { label: "Tarifs", href: "/tarifs" },
   { label: "L'instructrice", href: "/instructrice" },
   { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },

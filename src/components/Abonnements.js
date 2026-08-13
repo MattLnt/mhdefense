@@ -50,7 +50,7 @@ export default function Abonnements() {
   const lienUnite = `/reservation?mode=PONCTUEL&type=${SESSION_TYPE[typeUnite]}`;
 
   return (
-    <section className={styles.section} id="tarifs">
+    <section className={styles.section} id="formules">
       <div className={styles.glow} />
       <div className={`wrap ${styles.inner}`}>
         <div className={styles.head}>

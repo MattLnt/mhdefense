@@ -11,7 +11,7 @@ export default function StepFormule() {
     <>
       <div className={styles.qTitle}>Quel type de séance ?</div>
       <div className={styles.qSub}>
-        {isEssai ? "La séance d'essai offerte est individuelle." : "Le tarif s'adapte au nombre de participants."}
+        {isEssai ? "Votre séance d'essai est offerte, quel que soit le format." : "Le tarif s'adapte au nombre de participants."}
       </div>
 
       <div className={styles.options}>
@@ -22,7 +22,6 @@ export default function StepFormule() {
               key={t.key}
               className={`${styles.option} ${type === t.key ? styles.optionOn : ""}`}
               onClick={() => setType(t.key)}
-              disabled={isEssai && t.key !== "INDIVIDUEL"}
             >
               <div className={styles.optionIcon}><Ic /></div>
               <div className={styles.optionText}>

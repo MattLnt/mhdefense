@@ -86,7 +86,6 @@ export function ReservationProvider({ children }) {
       setStep(1);
     } else if (m === "ESSAI") {
       setMode("ESSAI");
-      setType("INDIVIDUEL");
       setStep(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,7 +123,6 @@ export function ReservationProvider({ children }) {
     setSlots([]);
     setErreur(null);
     resetPromo();
-    if (m === "ESSAI") setType("INDIVIDUEL");
     setStep(1);
   }
 
@@ -234,7 +232,7 @@ export function ReservationProvider({ children }) {
       const res = await fetch("/api/booking/essai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startsAt: slots[0], name: form.name, email: form.email, phone: form.phone }),
+        body: JSON.stringify({ startsAt: slots[0], name: form.name, email: form.email, phone: form.phone, sessionType: type, participantsCount: nbPersonnes }),
       });
       const data = await res.json();
       if (!res.ok) {
