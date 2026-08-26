@@ -39,7 +39,7 @@ export default function ClientsPage() {
     <>
       <div className={styles.head}>
         <div className={styles.title}>Clients & abonnements</div>
-        <div className={styles.sub}>Vos membres et l'état de leurs abonnements.</div>
+        <div className={styles.sub}>Vos membres, abonnés comme clients ponctuels.</div>
       </div>
 
       <div className={styles.search}>
@@ -97,10 +97,14 @@ export default function ClientsPage() {
                     )}
                   </div>
 
-                  {/* Statut */}
+                  {/* Statut / type */}
                   <div className={styles.statusCol}>
                     {c.subscription ? (
                       <span className={`${styles.badge} ${styles[st.cls]}`}>{st.label}</span>
+                    ) : c.guest && c.guestKind === "ESSAI" ? (
+                      <span className={`${styles.badge} ${styles.badgeTrial}`}>Essai</span>
+                    ) : c.guest ? (
+                      <span className={`${styles.badge} ${styles.badgePonctuel}`}>Ponctuel</span>
                     ) : (
                       <span className={`${styles.badge} ${styles.badgeNone}`}>Sans abonnement</span>
                     )}

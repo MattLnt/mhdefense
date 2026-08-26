@@ -170,6 +170,17 @@
   border-color: var(--glass-border);
 }
 
+.badgeTrial {
+  color: #d09a3e;
+  background: rgba(201, 162, 74, 0.14);
+  border-color: rgba(201, 162, 74, 0.32);
+}
+.badgePonctuel {
+  color: #7fa8d0;
+  background: rgba(90, 140, 190, 0.14);
+  border-color: rgba(90, 140, 190, 0.3);
+}
+
 .stat {
   width: 70px;
   flex: none;
