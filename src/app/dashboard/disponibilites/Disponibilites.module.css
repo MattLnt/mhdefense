@@ -278,8 +278,39 @@
   text-align: center;
 }
 
+/* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .panel {
+    padding: 18px;
+  }
+
+  /* Chaque ligne de jour : nom + toggle en haut, horaires en dessous */
+  .dayRow {
+    flex-wrap: wrap;
+    gap: 10px 12px;
+  }
+  .dayName {
+    width: auto;
+    flex: 1;
+    order: 1;
+  }
+  .switch {
+    order: 2;
+  }
+  .times {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+  .times input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
   }
 }
