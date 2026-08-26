@@ -8,14 +8,23 @@ const HOLD_MINUTES = 15;
 
 /**
  * POST /api/booking/hold
- * Body : { startsAt: ISO, type, sessionType, participantsCount, isFreeTrial }
+ * Body : { startsAt: ISO, type, sessionType, participantsCount, isFreeTrial, name, email, phone }
  * Crée une réservation HELD qui expire dans 15 min.
  * Si le créneau est déjà pris → 409 (grâce à l'index unique partiel).
  */
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { startsAt, type, sessionType, participantsCount, isFreeTrial } = body;
+    const {
+      startsAt,
+      type,
+      sessionType,
+      participantsCount,
+      isFreeTrial,
+      name,
+      email,
+      phone,
+    } = body;
 
     // Validation minimale
     if (!startsAt || !type || !sessionType) {
@@ -47,6 +56,10 @@ export async function POST(request) {
         participantsCount: participantsCount || 1,
         isFreeTrial: Boolean(isFreeTrial),
         expiresAt,
+        // Coordonnées client (nécessaires pour l'email de confirmation)
+        guestName: name?.trim() || null,
+        guestEmail: email?.trim().toLowerCase() || null,
+        guestPhone: phone?.trim() || null,
       },
       select: { id: true, startsAt: true, expiresAt: true },
     });
