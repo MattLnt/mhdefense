@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./Abonnements.module.css";
 
@@ -10,14 +10,14 @@ const Check = () => (
   </svg>
 );
 
+// Prix de repli (utilisés seulement si l'API ne répond pas)
 // prix abo[type][frequence] = [silver, gold, platinum]
-const PRIX_ABO = {
+const PRIX_ABO_FALLBACK = {
   indiv: { 1: [200, 190, 180], 2: [360, 340, 320] },
   groupe: { 1: [160, 150, 140], 2: [280, 260, 240] },
 };
-
 // prix ponctuel par type (par personne)
-const PRIX_UNITE = { indiv: 60, groupe: 45 };
+const PRIX_UNITE_FALLBACK = { indiv: 60, groupe: 45 };
 
 const PALIERS = [
   { key: "silver", niveau: "Silver", engagement: "Engagement 1 mois", accroche: "Sans engagement long", planKey: "SILVER" },
@@ -31,8 +31,10 @@ const AVANTAGES = [
   "Résultats durables",
 ];
 
-// Correspondance type UI → sessionType du tunnel
+// Correspondance type UI → sessionType du tunnel / de la base
 const SESSION_TYPE = { indiv: "INDIVIDUEL", groupe: "DUO" };
+// Ordre des paliers pour reconstruire [silver, gold, platinum]
+const PLAN_ORDER = ["SILVER", "GOLD", "PLATINUM"];
 
 export default function Abonnements() {
   const [mode, setMode] = useState("abo"); // "abo" | "unite"
@@ -40,13 +42,54 @@ export default function Abonnements() {
   const [freq, setFreq] = useState(1); // 1 | 2
   const [typeUnite, setTypeUnite] = useState("indiv"); // unité : "indiv" | "groupe"
 
+  // Prix chargés depuis la base (null tant que non chargé → repli)
+  const [prixAboDB, setPrixAboDB] = useState(null); // même forme que PRIX_ABO_FALLBACK
+  const [prixUniteDB, setPrixUniteDB] = useState(null); // { indiv, groupe }
+
+  useEffect(() => {
+    fetch("/api/pricing")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+
+        // Prix ponctuels (centimes → euros). "groupe" de l'UI = DUO en base.
+        setPrixUniteDB({
+          indiv: Math.round((data.ponctuel?.INDIVIDUEL || 0) / 100),
+          groupe: Math.round((data.ponctuel?.DUO || 0) / 100),
+        });
+
+        // Abonnements : reconstruire { indiv: { 1:[s,g,p], 2:[...] }, groupe: {...} }
+        if (Array.isArray(data.plans)) {
+          const build = (sessionType) => {
+            const parFreq = { 1: [0, 0, 0], 2: [0, 0, 0] };
+            for (const pl of data.plans) {
+              if (pl.sessionType !== sessionType) continue;
+              const f = pl.frequency === "TWICE" ? 2 : 1;
+              const idx = PLAN_ORDER.indexOf(pl.key);
+              if (idx !== -1) parFreq[f][idx] = Math.round(pl.price / 100);
+            }
+            return parFreq;
+          };
+          setPrixAboDB({
+            indiv: build("INDIVIDUEL"),
+            groupe: build("DUO"),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Prix effectifs : base si dispo, sinon repli
+  const PRIX_ABO = prixAboDB || PRIX_ABO_FALLBACK;
+  const PRIX_UNITE = prixUniteDB || PRIX_UNITE_FALLBACK;
+
   const prixAbo = PRIX_ABO[type][freq];
 
   // Lien tunnel pré-rempli — abonnement
   const lienAbo = (planKey) =>
     `/reservation?mode=ABONNEMENT&type=${SESSION_TYPE[type]}&plan=${planKey}&freq=${freq === 1 ? "ONCE" : "TWICE"}`;
 
-  // Lien tunnel pré-rempli — unité (duo/groupe → DUO par défaut, ajustable dans le tunnel)
+  // Lien tunnel pré-rempli — unité
   const lienUnite = `/reservation?mode=PONCTUEL&type=${SESSION_TYPE[typeUnite]}`;
 
   return (
