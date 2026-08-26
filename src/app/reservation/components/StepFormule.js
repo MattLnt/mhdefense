@@ -1,11 +1,14 @@
 "use client";
 
-import { useReservation, TYPES, PLANS, PRIX_ABO } from "./ReservationContext";
+import { useReservation, TYPES, PLANS } from "./ReservationContext";
 import { TYPE_ICON } from "./icons";
 import styles from "../Reservation.module.css";
 
 export default function StepFormule() {
-  const { isAbo, isEssai, type, setType, freq, setFreq, plan, setPlan, setSlots } = useReservation();
+  const {
+    isAbo, isEssai, type, setType, freq, setFreq, plan, setPlan, setSlots,
+    prixPonctuel, prixAbo,
+  } = useReservation();
 
   return (
     <>
@@ -30,7 +33,7 @@ export default function StepFormule() {
               </div>
               {!isEssai && (
                 <div className={styles.optionPrice}>
-                  {isAbo ? PRIX_ABO[t.key][plan][freq] : t.prixPonctuel} €
+                  {isAbo ? prixAbo(t.key, plan, freq) : prixPonctuel(t.key)} €
                   <span>
                     {isAbo
                       ? `/mois${t.key !== "INDIVIDUEL" ? " /pers." : ""}`
@@ -88,7 +91,7 @@ export default function StepFormule() {
                     <div className={styles.optionDesc}>{p.desc}</div>
                   </div>
                   <div className={styles.optionPrice}>
-                    {PRIX_ABO[type][p.key][freq]} €
+                    {prixAbo(type, p.key, freq)} €
                     <span>/mois{type !== "INDIVIDUEL" ? " /pers." : ""}</span>
                   </div>
                 </button>

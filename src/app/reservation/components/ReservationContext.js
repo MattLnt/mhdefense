@@ -17,11 +17,14 @@ export const PLANS = [
   { key: "PLATINUM", name: "Platinum", months: 6, desc: "6 mois" },
 ];
 
+// Prix de repli (utilisés seulement si l'API /api/pricing ne répond pas)
 export const PRIX_ABO = {
   INDIVIDUEL: { SILVER: { 1: 200, 2: 360 }, GOLD: { 1: 190, 2: 340 }, PLATINUM: { 1: 180, 2: 320 } },
   DUO: { SILVER: { 1: 160, 2: 280 }, GOLD: { 1: 150, 2: 260 }, PLATINUM: { 1: 140, 2: 240 } },
   GROUPE: { SILVER: { 1: 160, 2: 280 }, GOLD: { 1: 150, 2: 260 }, PLATINUM: { 1: 140, 2: 240 } },
 };
+
+const PRIX_PONCTUEL_FALLBACK = { INDIVIDUEL: 60, DUO: 45, GROUPE: 45 };
 
 export const FREQ_ENUM = { 1: "ONCE", 2: "TWICE" };
 export const STEPS = ["Choix", "Formule", "Créneau", "Infos", "Paiement"];
@@ -64,6 +67,37 @@ export function ReservationProvider({ children }) {
     name: "", email: "", phone: "", password: "", p2Name: "", p3Name: "",
   });
 
+  // Prix chargés depuis l'admin (base de données). null tant que non chargé → on utilise le repli.
+  const [prixPonctuelDB, setPrixPonctuelDB] = useState(null); // { INDIVIDUEL, DUO, GROUPE } en euros
+  const [prixAboDB, setPrixAboDB] = useState(null);           // { [type]: { [plan]: { 1, 2 } } } en euros
+
+  // Chargement des vrais prix
+  useEffect(() => {
+    fetch("/api/pricing")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        // Prix ponctuels (centimes → euros)
+        setPrixPonctuelDB({
+          INDIVIDUEL: Math.round((data.ponctuel?.INDIVIDUEL || 0) / 100),
+          DUO: Math.round((data.ponctuel?.DUO || 0) / 100),
+          GROUPE: Math.round((data.ponctuel?.GROUPE || 0) / 100),
+        });
+        // Abonnements : reconstruction de la structure [type][plan][freq]
+        if (Array.isArray(data.plans)) {
+          const abo = {};
+          for (const p of data.plans) {
+            const f = p.frequency === "TWICE" ? 2 : 1;
+            if (!abo[p.sessionType]) abo[p.sessionType] = {};
+            if (!abo[p.sessionType][p.key]) abo[p.sessionType][p.key] = {};
+            abo[p.sessionType][p.key][f] = Math.round(p.price / 100);
+          }
+          setPrixAboDB(abo);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Pré-remplissage depuis l'URL (liens venant de la home / tarifs)
   useEffect(() => {
     const m = searchParams.get("mode");
@@ -98,7 +132,13 @@ export function ReservationProvider({ children }) {
   const nbPersonnes = isEssai ? 1 : typeInfo.personnes;
   const maxSlots = isAbo ? freq : 1;
 
-  const prixUnitaire = isAbo ? PRIX_ABO[type][plan][freq] : typeInfo.prixPonctuel;
+  // Prix effectifs : base de données si dispo, sinon repli
+  const prixPonctuel = (t) =>
+    prixPonctuelDB ? prixPonctuelDB[t] : PRIX_PONCTUEL_FALLBACK[t];
+  const prixAbo = (t, p, f) =>
+    prixAboDB?.[t]?.[p]?.[f] != null ? prixAboDB[t][p][f] : PRIX_ABO[t][p][f];
+
+  const prixUnitaire = isAbo ? prixAbo(type, plan, freq) : prixPonctuel(type);
   const total = isEssai ? 0 : prixUnitaire * nbPersonnes;
   const totalApresPromo = promo ? Math.round(promo.newAmount / 100) : total;
 
@@ -267,6 +307,8 @@ export function ReservationProvider({ children }) {
     promoInput, setPromoInput, promo, promoLoading, promoError,
     // dérivés
     isAbo, isEssai, typeInfo, nbPersonnes, maxSlots, total, totalApresPromo, canNext, returnUrl,
+    // prix (pour affichage dans les étapes)
+    prixPonctuel, prixAbo,
     // actions
     choisir, retour, suivant, appliquerCodePromo, resetPromo,
   };
