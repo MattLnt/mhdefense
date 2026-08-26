@@ -5,12 +5,14 @@ import { resend } from "@/lib/resend";
 import {
   emailConfirmationReservation,
   emailBienvenueAbonnement,
+  emailNotificationAdmin,
 } from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
 const QUOTA = { ONCE: 1, TWICE: 2 };
 const FROM = "MH Defense <contact@mh-defense.com>";
+const ADMIN_EMAIL = "contact@mh-defense.com";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://www.mh-defense.com";
 
 const LABEL_SESSION = {
@@ -38,6 +40,23 @@ async function consommerPromo(code) {
 }
 
 /**
+ * Notifie Marie (admin) d'un événement de réservation.
+ * Best-effort : ne lève jamais.
+ */
+async function notifierAdmin(data) {
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: ADMIN_EMAIL,
+      subject: data.subject,
+      html: emailNotificationAdmin(data.payload),
+    });
+  } catch (e) {
+    console.error("[webhook] notification admin échouée :", e.message);
+  }
+}
+
+/**
  * Envoie l'email de confirmation d'une réservation ponctuelle payée.
  * Best-effort : ne lève jamais.
  */
@@ -45,13 +64,13 @@ async function envoyerConfirmationPonctuel(bookingId) {
   try {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
-      include: { user: true },
+      include: { user: true, payment: true },
     });
     if (!booking) return;
 
     const email = booking.guestEmail || booking.user?.email;
     const nom = booking.guestName || booking.user?.name || "";
-    if (!email) return;
+    const phone = booking.guestPhone || booking.user?.phone || "";
 
     const dateHeure = new Intl.DateTimeFormat("fr-FR", {
       weekday: "long",
@@ -61,18 +80,41 @@ async function envoyerConfirmationPonctuel(bookingId) {
       minute: "2-digit",
     }).format(new Date(booking.startsAt));
 
-    await resend.emails.send({
-      from: FROM,
-      to: email,
-      subject: "Votre réservation est confirmée — MH Defense",
-      html: emailConfirmationReservation({
-        name: nom,
-        formule: LABEL_SESSION[booking.sessionType] || "Séance",
+    const formule = LABEL_SESSION[booking.sessionType] || "Séance";
+
+    // Email au client (si on a une adresse)
+    if (email) {
+      await resend.emails.send({
+        from: FROM,
+        to: email,
+        subject: "Votre réservation est confirmée — MH Defense",
+        html: emailConfirmationReservation({
+          name: nom,
+          formule,
+          dateHeure,
+          duree: "1 heure",
+          lieu: "Sarrians (84)",
+          isEssai: false,
+        }),
+      });
+    }
+
+    // Notification à Marie
+    const montant = booking.payment?.totalAmount
+      ? `${(booking.payment.totalAmount / 100).toFixed(2)} €`
+      : null;
+
+    await notifierAdmin({
+      subject: "Nouvelle réservation — MH Defense",
+      payload: {
+        kind: "PONCTUEL",
+        clientName: nom,
+        clientEmail: email,
+        clientPhone: phone,
+        formule,
         dateHeure,
-        duree: "1 heure",
-        lieu: "Sarrians (84)",
-        isEssai: false,
-      }),
+        montant,
+      },
     });
   } catch (e) {
     console.error("[webhook] email confirmation ponctuel échoué :", e.message);
@@ -83,25 +125,41 @@ async function envoyerConfirmationPonctuel(bookingId) {
  * Envoie l'email de bienvenue après création d'un abonnement.
  * Best-effort : ne lève jamais.
  */
-async function envoyerBienvenueAbonnement({ email, name, sessionType, engagementMonths }) {
+async function envoyerBienvenueAbonnement({ email, name, phone, sessionType, engagementMonths }) {
   try {
-    if (!email) return;
-
     const engagement =
       engagementMonths === 1
         ? "1 mois"
         : `${engagementMonths} mois`;
 
-    await resend.emails.send({
-      from: FROM,
-      to: email,
-      subject: "Bienvenue chez MH Defense 🥋",
-      html: emailBienvenueAbonnement({
-        name: name || "",
-        formule: LABEL_ABO[sessionType] || "Abonnement",
+    const formule = LABEL_ABO[sessionType] || "Abonnement";
+
+    // Email au client
+    if (email) {
+      await resend.emails.send({
+        from: FROM,
+        to: email,
+        subject: "Bienvenue chez MH Defense 🥋",
+        html: emailBienvenueAbonnement({
+          name: name || "",
+          formule,
+          engagement,
+          espaceUrl: `${BASE_URL}/compte`,
+        }),
+      });
+    }
+
+    // Notification à Marie
+    await notifierAdmin({
+      subject: "Nouvel abonnement — MH Defense",
+      payload: {
+        kind: "ABONNEMENT",
+        clientName: name,
+        clientEmail: email,
+        clientPhone: phone,
+        formule,
         engagement,
-        espaceUrl: `${BASE_URL}/compte`,
-      }),
+      },
     });
   } catch (e) {
     console.error("[webhook] email bienvenue échoué :", e.message);
@@ -161,10 +219,11 @@ async function creerCompteDepuisPending(pendingSignupId) {
     await tx.pendingSignup.delete({ where: { id: pending.id } });
   });
 
-  // Email de bienvenue (après la transaction, best-effort)
+  // Email de bienvenue + notif admin (après la transaction, best-effort)
   await envoyerBienvenueAbonnement({
     email: pending.email,
     name: pending.name,
+    phone: pending.phone,
     sessionType: pending.sessionType,
     engagementMonths: pending.engagementMonths,
   });
@@ -297,6 +356,26 @@ export async function POST(request) {
           where: { stripeSubId: sub.id },
           data: { status: "ENDED" },
         });
+
+        // Notification à Marie : abonnement résilié
+        try {
+          const dbSub = await prisma.subscription.findFirst({
+            where: { stripeSubId: sub.id },
+            include: { user: true },
+          });
+          await notifierAdmin({
+            subject: "Abonnement résilié — MH Defense",
+            payload: {
+              kind: "ANNULATION",
+              clientName: dbSub?.user?.name,
+              clientEmail: dbSub?.user?.email,
+              clientPhone: dbSub?.user?.phone,
+              formule: dbSub ? LABEL_ABO[dbSub.sessionType] || "Abonnement" : "Abonnement",
+            },
+          });
+        } catch (e) {
+          console.error("[webhook] notif résiliation échouée :", e.message);
+        }
         break;
       }
 

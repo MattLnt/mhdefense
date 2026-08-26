@@ -216,3 +216,89 @@ export function emailBienvenueAbonnement({ name, formule, engagement, espaceUrl 
     </tr>`;
   return baseLayout(inner);
 }
+
+/**
+ * Email de notification admin (envoyé à Marie).
+ * Gère : nouvelle réservation ponctuelle, essai, abonnement, et annulation.
+ * @param {object} data {
+ *   kind: "PONCTUEL" | "ESSAI" | "ABONNEMENT" | "ANNULATION",
+ *   clientName, clientEmail, clientPhone,
+ *   formule, dateHeure, montant, engagement
+ * }
+ */
+export function emailNotificationAdmin({
+  kind = "PONCTUEL",
+  clientName,
+  clientEmail,
+  clientPhone,
+  formule,
+  dateHeure,
+  montant,
+  engagement,
+}) {
+  // Configuration par type
+  const config = {
+    PONCTUEL: { titre: "Nouvelle réservation", accent: "ponctuelle", emoji: "📅", intro: "Une séance à l'unité vient d'être réservée et payée." },
+    ESSAI: { titre: "Nouvelle séance", accent: "d'essai", emoji: "🎁", intro: "Une séance d'essai gratuite vient d'être réservée." },
+    ABONNEMENT: { titre: "Nouvel", accent: "abonnement", emoji: "⭐", intro: "Un nouvel abonnement vient d'être souscrit." },
+    ANNULATION: { titre: "Réservation", accent: "annulée", emoji: "❌", intro: "Une réservation vient d'être annulée." },
+  };
+  const c = config[kind] || config.PONCTUEL;
+
+  // Lignes d'infos (on n'affiche que celles fournies)
+  const rangees = [];
+  if (dateHeure) rangees.push({ label: "Date & heure", value: dateHeure, accent: true });
+  if (formule) rangees.push({ label: "Formule", value: formule });
+  if (engagement) rangees.push({ label: "Engagement", value: engagement });
+  if (montant) rangees.push({ label: "Montant", value: montant, rose: true });
+
+  const infosHtml = rangees
+    .map(
+      (r, i) => `
+      <tr><td style="padding:14px 20px;${i < rangees.length - 1 ? `border-bottom:1px solid rgba(255,255,255,0.07);` : ""}">
+        <span style="font-size:13px;color:${COLORS.w50};">${r.label}</span>
+        <span style="float:right;font-size:14px;color:${r.rose ? COLORS.rose2 : COLORS.white};font-weight:${r.accent ? "700" : "600"};">${r.value}</span>
+      </td></tr>`
+    )
+    .join("");
+
+  const inner = `
+    <tr>
+      <td style="padding:10px 44px 0;text-align:center;">
+        <div style="width:60px;height:60px;border-radius:50%;background:${COLORS.roseBg};border:1px solid ${COLORS.roseBorder};display:inline-block;line-height:60px;margin-bottom:20px;">
+          <span style="font-size:26px;">${c.emoji}</span>
+        </div>
+        <h1 style="margin:0 0 12px;font-size:23px;color:${COLORS.white};font-weight:800;">
+          ${c.titre} <span style="color:${COLORS.rose2};">${c.accent}</span>
+        </h1>
+        <p style="margin:0 0 26px;font-size:14px;line-height:1.6;color:${COLORS.w60};">${c.intro}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 40px 8px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.cardBg};border:1px solid rgba(255,255,255,0.1);border-radius:12px;">
+          ${infosHtml}
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 40px 8px;">
+        <div style="font-size:12px;color:${COLORS.w50};text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Client</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLORS.roseBg};border:1px solid ${COLORS.roseBorder};border-radius:12px;">
+          <tr><td style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <span style="font-size:13px;color:${COLORS.w50};">Nom</span>
+            <span style="float:right;font-size:14px;color:${COLORS.white};font-weight:600;">${clientName || "—"}</span>
+          </td></tr>
+          <tr><td style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.07);">
+            <span style="font-size:13px;color:${COLORS.w50};">Email</span>
+            <span style="float:right;font-size:14px;color:${COLORS.rose2};font-weight:600;">${clientEmail || "—"}</span>
+          </td></tr>
+          <tr><td style="padding:14px 20px;">
+            <span style="font-size:13px;color:${COLORS.w50};">Téléphone</span>
+            <span style="float:right;font-size:14px;color:${COLORS.white};font-weight:600;">${clientPhone || "—"}</span>
+          </td></tr>
+        </table>
+      </td>
+    </tr>`;
+  return baseLayout(inner);
+}

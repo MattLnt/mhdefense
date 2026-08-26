@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
-import { emailConfirmationReservation } from "@/lib/email-templates";
+import {
+  emailConfirmationReservation,
+  emailNotificationAdmin,
+} from "@/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
 const FROM = "MH Defense <contact@mh-defense.com>";
+const ADMIN_EMAIL = "contact@mh-defense.com";
 
 // Types autorisés et nombre de participants max par type
 const SESSION_TYPES = {
@@ -79,16 +83,16 @@ export async function POST(request) {
       select: { id: true },
     });
 
-    // Email de confirmation (best-effort)
-    try {
-      const dateHeure = new Intl.DateTimeFormat("fr-FR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(start);
+    const dateHeure = new Intl.DateTimeFormat("fr-FR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(start);
 
+    // Email de confirmation au client (best-effort)
+    try {
       await resend.emails.send({
         from: FROM,
         to: normalizedEmail,
@@ -104,6 +108,25 @@ export async function POST(request) {
       });
     } catch (mailErr) {
       console.error("[booking/essai] email confirmation échoué :", mailErr);
+    }
+
+    // Notification à Marie (best-effort)
+    try {
+      await resend.emails.send({
+        from: FROM,
+        to: ADMIN_EMAIL,
+        subject: "Nouvelle séance d'essai — MH Defense",
+        html: emailNotificationAdmin({
+          kind: "ESSAI",
+          clientName: name.trim(),
+          clientEmail: normalizedEmail,
+          clientPhone: phone.trim(),
+          formule: typeInfo.label,
+          dateHeure,
+        }),
+      });
+    } catch (mailErr) {
+      console.error("[booking/essai] notif admin échouée :", mailErr);
     }
 
     return NextResponse.json({ booking });
