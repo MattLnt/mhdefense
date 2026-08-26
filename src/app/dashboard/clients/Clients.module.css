@@ -162,7 +162,7 @@
   text-align: center;
 }
 
-/* Mobile : on masque les colonnes secondaires, on garde plan + statut */
+/* Tablette : on masque les colonnes secondaires, on garde plan + statut */
 @media (max-width: 820px) {
   .price,
   .stat {
@@ -173,5 +173,33 @@
   }
   .statusCol {
     width: auto;
+  }
+}
+
+/* Mobile étroit : plan + statut passent sous les infos client */
+@media (max-width: 560px) {
+  .list {
+    padding: 6px 16px;
+  }
+  .row {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+  /* avatar + infos : 1re ligne */
+  .who {
+    flex: 1;
+  }
+  /* plan + statut : ligne complète en dessous, alignés à gauche */
+  .plan,
+  .statusCol {
+    flex-basis: 100%;
+    width: 100%;
+    text-align: left;
+    justify-content: flex-start;
+  }
+  .plan {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
   }
 }
