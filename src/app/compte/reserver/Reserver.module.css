@@ -162,14 +162,17 @@
 .recapRow {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   font-size: 0.86rem;
   padding: 7px 0;
 }
 .recapRow span:first-child {
   color: var(--muted);
+  flex: none;
 }
 .recapRow span:last-child {
   font-weight: 600;
+  text-align: right;
 }
 .recapIncluse {
   color: #f0699a;
@@ -267,6 +270,7 @@
   text-align: center;
 }
 
+/* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
@@ -276,5 +280,23 @@
   }
   .recap {
     min-height: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .card {
+    padding: 18px;
+  }
+  .slots {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .quotaText b {
+    font-size: 0.82rem;
+  }
+  .quotaText span {
+    font-size: 0.72rem;
+  }
+  .recapDay {
+    font-size: 2rem;
   }
 }

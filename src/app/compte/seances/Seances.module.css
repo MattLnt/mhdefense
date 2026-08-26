@@ -153,3 +153,27 @@
   padding: 40px 0;
   text-align: center;
 }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 560px) {
+  .card {
+    padding: 8px 16px;
+  }
+
+  /* Ligne séance : date + infos en haut, statut + bouton dessous */
+  .resa {
+    flex-wrap: wrap;
+    gap: 10px 12px;
+  }
+  .rinfo {
+    flex-basis: calc(100% - 64px);
+  }
+  .status {
+    order: 3;
+    margin-left: 64px;
+  }
+  .cancelBtn {
+    order: 4;
+    margin-left: auto;
+  }
+}
