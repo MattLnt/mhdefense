@@ -71,43 +71,46 @@ export default function ClientsPage() {
                   </p>
                 </div>
 
-                {/* Colonne formule */}
-                <div className={styles.plan}>
-                  {c.subscription ? (
-                    <>
-                      <b>{c.subscription.planLabel}</b>
-                      <span>{c.subscription.sessionLabel}</span>
-                    </>
-                  ) : (
-                    <span>—</span>
-                  )}
-                </div>
+                {/* Bloc abonnement (formule + prix + statut + séances) */}
+                <div className={styles.right}>
+                  {/* Formule */}
+                  <div className={styles.plan}>
+                    {c.subscription ? (
+                      <>
+                        <b>{c.subscription.planLabel}</b>
+                        <span>{c.subscription.sessionLabel}</span>
+                      </>
+                    ) : (
+                      <span className={styles.planEmpty}>—</span>
+                    )}
+                  </div>
 
-                {/* Colonne prix */}
-                <div className={styles.price}>
-                  {c.subscription ? (
-                    <>
-                      {Math.round(c.subscription.monthlyAmount / 100)} €
-                      <span>par mois</span>
-                    </>
-                  ) : (
-                    ""
-                  )}
-                </div>
+                  {/* Prix */}
+                  <div className={styles.price}>
+                    {c.subscription ? (
+                      <>
+                        {Math.round(c.subscription.monthlyAmount / 100)} €
+                        <span>par mois</span>
+                      </>
+                    ) : (
+                      ""
+                    )}
+                  </div>
 
-                {/* Colonne statut */}
-                <div className={styles.statusCol}>
-                  {c.subscription ? (
-                    <span className={`${styles.badge} ${styles[st.cls]}`}>{st.label}</span>
-                  ) : (
-                    <span className={`${styles.badge} ${styles.badgeNone}`}>Sans abonnement</span>
-                  )}
-                </div>
+                  {/* Statut */}
+                  <div className={styles.statusCol}>
+                    {c.subscription ? (
+                      <span className={`${styles.badge} ${styles[st.cls]}`}>{st.label}</span>
+                    ) : (
+                      <span className={`${styles.badge} ${styles.badgeNone}`}>Sans abonnement</span>
+                    )}
+                  </div>
 
-                {/* Colonne séances */}
-                <div className={styles.stat}>
-                  <b>{c.totalBookings}</b>
-                  <span>séance{c.totalBookings > 1 ? "s" : ""}</span>
+                  {/* Séances */}
+                  <div className={styles.stat}>
+                    <b>{c.totalBookings}</b>
+                    <span>séance{c.totalBookings > 1 ? "s" : ""}</span>
+                  </div>
                 </div>
               </div>
             );
