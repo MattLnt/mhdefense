@@ -101,15 +101,45 @@
   display: block;
   margin-bottom: 10px;
 }
-.inputEuro {
+
+/* ---------- Champ prix premium (boutons − / +) ---------- */
+.priceInput {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.stepBtn {
+  flex: none;
+  width: 40px;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--txt);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.stepBtn:hover {
+  border-color: #d64c7f;
+  background: #d64c7f;
+  color: #fff;
+}
+.stepBtn:active {
+  transform: scale(0.94);
+}
+.priceField {
   position: relative;
   display: flex;
   align-items: center;
+  flex: 1;
+  min-width: 0;
 }
-.inputEuro input {
+.priceField input {
   width: 100%;
   min-width: 0;
-  padding: 11px 32px 11px 13px;
+  padding: 11px 30px 11px 13px;
   border: 1.5px solid var(--glass-border);
   border-radius: 10px;
   font-family: inherit;
@@ -117,14 +147,15 @@
   font-weight: 700;
   background: var(--bg);
   color: var(--txt);
+  text-align: center;
 }
-.inputEuro input:focus {
+.priceField input:focus {
   outline: none;
   border-color: #d64c7f;
 }
-.inputEuro .euro {
+.priceField .euro {
   position: absolute;
-  right: 13px;
+  right: 12px;
   color: var(--muted);
   font-weight: 600;
   pointer-events: none;
@@ -155,9 +186,10 @@
 }
 .aboGrid {
   display: grid;
-  grid-template-columns: 120px 1fr 1fr;
-  gap: 10px;
-  min-width: 380px;
+  grid-template-columns: 110px 1fr 1fr;
+  gap: 10px 14px;
+  min-width: 460px;
+  align-items: center;
 }
 .aboHeader {
   font-size: 0.74rem;
@@ -170,6 +202,14 @@
 }
 .aboHeaderLeft {
   text-align: left;
+}
+/* Une ligne = un sous-grid qui occupe les 3 colonnes */
+.aboRow {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  gap: 14px;
+  align-items: center;
 }
 .aboRowLabel {
   display: flex;
@@ -185,33 +225,7 @@
   font-weight: 500;
 }
 .aboCell {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.aboCell input {
-  width: 100%;
   min-width: 0;
-  padding: 10px 28px 10px 12px;
-  border: 1.5px solid var(--glass-border);
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 600;
-  background: var(--rd);
-  color: var(--txt);
-  text-align: center;
-}
-.aboCell input:focus {
-  outline: none;
-  border-color: #d64c7f;
-}
-.aboCell .euro {
-  position: absolute;
-  right: 10px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  pointer-events: none;
 }
 
 .loading {
@@ -230,5 +244,11 @@
 @media (max-width: 560px) {
   .panel {
     padding: 18px;
+  }
+  .stepBtn {
+    width: 36px;
+  }
+  .priceField input {
+    font-size: 0.98rem;
   }
 }

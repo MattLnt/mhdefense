@@ -63,6 +63,9 @@ export function ReservationProvider({ children }) {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState(null);
 
+  // Acceptation des CGV (obligatoire avant paiement / confirmation)
+  const [cgvAccepte, setCgvAccepte] = useState(false);
+
   const [form, setForm] = useState({
     name: "", email: "", phone: "", password: "", p2Name: "", p3Name: "",
   });
@@ -147,6 +150,7 @@ export function ReservationProvider({ children }) {
     : step === 1 ? true
     : step === 2 ? slots.length === maxSlots
     : step === 3 ? form.name && form.email && form.phone && (!isAbo || isPasswordValidLocal(form.password))
+    : step === 4 ? cgvAccepte
     : true;
 
   /* ---------- Actions ---------- */
@@ -163,6 +167,7 @@ export function ReservationProvider({ children }) {
     setSlots([]);
     setErreur(null);
     resetPromo();
+    setCgvAccepte(false);
     setStep(1);
   }
 
@@ -314,6 +319,7 @@ export function ReservationProvider({ children }) {
     slots, setSlots, paiement, setPaiement, loading, erreur,
     clientSecret, payAmount, form, setField,
     promoInput, setPromoInput, promo, promoLoading, promoError,
+    cgvAccepte, setCgvAccepte,
     // dérivés
     isAbo, isEssai, typeInfo, nbPersonnes, maxSlots, total, totalApresPromo, canNext, returnUrl,
     // prix (pour affichage dans les étapes)

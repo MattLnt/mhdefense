@@ -2,6 +2,7 @@
 
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
+import Link from "next/link";
 import PaymentForm from "@/components/PaymentForm";
 import { useReservation, PLANS } from "./ReservationContext";
 import { Check, Info, Lock } from "./icons";
@@ -36,6 +37,7 @@ export default function StepPaiement() {
     clientSecret, payAmount, returnUrl, erreur,
     promoInput, setPromoInput, promo, promoLoading, promoError,
     appliquerCodePromo, resetPromo, totalApresPromo,
+    cgvAccepte, setCgvAccepte,
   } = useReservation();
 
   const acompte = Math.round(totalApresPromo / 2);
@@ -106,6 +108,22 @@ export default function StepPaiement() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Case CGV (obligatoire avant paiement / confirmation) */}
+      {!clientSecret && (
+        <label className={styles.cgvRow}>
+          <input
+            type="checkbox"
+            checked={cgvAccepte}
+            onChange={(e) => setCgvAccepte(e.target.checked)}
+            className={styles.cgvCheck}
+          />
+          <span>
+            J'ai lu et j'accepte les{" "}
+            <Link href="/cgv" target="_blank" rel="noopener noreferrer">conditions générales de vente</Link>.
+          </span>
+        </label>
       )}
 
       {/* Stripe */}

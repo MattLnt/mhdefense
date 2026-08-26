@@ -802,3 +802,36 @@
   color: var(--muted);
   font-size: 1rem;
 }
+
+/* ---------- Case CGV ---------- */
+.cgvRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  background: var(--cloud, #f4eeee);
+  border: 1px solid var(--line, #ece4e3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink, #1a1414);
+}
+.cgvCheck {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  accent-color: #d64c7f;
+  cursor: pointer;
+}
+.cgvRow a {
+  color: #d64c7f;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.cgvRow a:hover {
+  color: #f0699a;
+}

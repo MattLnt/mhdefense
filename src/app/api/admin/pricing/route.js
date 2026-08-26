@@ -9,6 +9,12 @@ async function requireAdmin() {
   return session?.user?.role === "ADMIN";
 }
 
+// Normalise une saisie euros (accepte virgule ou point) → nombre
+function parseEuros(v) {
+  if (v === undefined || v === null) return NaN;
+  return Number(String(v).replace(",", ".").trim());
+}
+
 /**
  * GET /api/admin/pricing
  * Renvoie les prix ponctuels (Setting) et les abonnements (Plan).
@@ -54,7 +60,7 @@ export async function GET() {
 /**
  * PUT /api/admin/pricing
  * Body : { ponctuel: {INDIVIDUEL, DUO, GROUPE}, plans: [{id, price}] }
- * Met à jour les prix (en euros → convertis en centimes).
+ * Met à jour les prix (en euros, virgule ou point → convertis en centimes).
  */
 export async function PUT(request) {
   if (!(await requireAdmin())) {
@@ -64,8 +70,11 @@ export async function PUT(request) {
   try {
     const { ponctuel, plans } = await request.json();
 
-    const toCents = (euros) => Math.round(Number(euros) * 100);
-    const valid = (v) => !isNaN(Number(v)) && Number(v) >= 0;
+    const toCents = (euros) => Math.round(parseEuros(euros) * 100);
+    const valid = (v) => {
+      const n = parseEuros(v);
+      return !isNaN(n) && n >= 0;
+    };
 
     // Validation
     if (ponctuel) {
