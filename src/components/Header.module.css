@@ -89,21 +89,26 @@
   padding: 6px;
 }
 
+/* ---------- Menu mobile plein écran opaque ---------- */
 .mobileMenu {
   display: none;
+  position: fixed;
+  top: 84px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   flex-direction: column;
   gap: 4px;
-  padding: 14px 26px 26px;
-  background: rgba(23, 10, 17, 0.96);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 24px 26px 40px;
+  background: linear-gradient(160deg, #170A11, #2a0f19);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
 }
 .mobileMenu a {
   color: rgba(255, 255, 255, 0.82);
   font-weight: 400 !important;
   font-size: 1rem;
-  padding: 12px 0;
+  padding: 14px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 .mobileMenu a:last-of-type {
