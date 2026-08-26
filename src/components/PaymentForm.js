@@ -71,7 +71,15 @@ export default function PaymentForm({ amount, returnUrl }) {
         <PaymentElement
           options={{
             layout: "tabs",
-            fields: { billingDetails: { address: { country: "never" } } },
+            wallets: { link: "never", applePay: "auto", googlePay: "auto" },
+            fields: {
+              billingDetails: {
+                name: "never",
+                email: "never",
+                phone: "never",
+                address: { country: "never" },
+              },
+            },
           }}
         />
       </div>
