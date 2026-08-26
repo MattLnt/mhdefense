@@ -48,8 +48,9 @@
   gap: 11px;
 }
 .brand img {
-  height: 42px;
+  height: 64px;
   width: auto;
+  max-width: none;
 }
 
 /* Carte de connexion en verre */
@@ -70,8 +71,9 @@
 }
 
 .logo {
-  height: auto;
-  width: 64px;
+  height: 80px;
+  width: auto;
+  max-width: none;
   margin-bottom: 22px;
 }
 
@@ -261,5 +263,8 @@
   }
   .title {
     font-size: 1.7rem;
+  }
+  .logo {
+    height: 64px;
   }
 }

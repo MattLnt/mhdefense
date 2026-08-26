@@ -142,7 +142,7 @@ export default function ConnexionPage() {
   return (
     <main className={styles.page}>
       <Link href="/" className={styles.brand} aria-label="MH Defense — accueil">
-        <Image src="/images/logo-white.png" alt="MH Defense" width={140} height={140} />
+        <Image src="/images/logo-white.svg" alt="MH Defense" width={220} height={110} />
       </Link>
 
       <Suspense fallback={null}>

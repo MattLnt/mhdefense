@@ -43,6 +43,11 @@ const IconQr = () => (
     <rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3M20 14v.01M14 20h.01M20 20h.01M17 17h.01M20 17h.01M17 20h.01" />
   </svg>
 );
+const IconLogout = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+  </svg>
+);
 
 const NAV = [
   { section: "Gestion" },
@@ -199,6 +204,13 @@ export default function DashboardLayout({ children }) {
             <span>{short}</span>
           </button>
         ))}
+        <button
+          className={styles.barLink}
+          onClick={() => signOut({ callbackUrl: "/" })}
+        >
+          <IconLogout />
+          <span>Quitter</span>
+        </button>
       </nav>
     </div>
   );

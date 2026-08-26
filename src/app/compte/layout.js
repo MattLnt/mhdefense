@@ -27,6 +27,11 @@ const IconProfil = () => (
     <circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
   </svg>
 );
+const IconLogout = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+  </svg>
+);
 
 const NAV = [
   { href: "/compte", label: "Tableau de bord", Icon: IconDash },
@@ -169,6 +174,13 @@ export default function CompteLayout({ children }) {
             <span>{label}</span>
           </button>
         ))}
+        <button
+          className={styles.barLink}
+          onClick={() => signOut({ callbackUrl: "/" })}
+        >
+          <IconLogout />
+          <span>Quitter</span>
+        </button>
       </nav>
     </div>
   );
