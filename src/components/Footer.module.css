@@ -36,8 +36,9 @@
 
 /* Colonne marque */
 .brand img {
-  height: 46px;
+  height: 90px;
   width: auto;
+  max-width: none;
   margin-bottom: 18px;
 }
 .brandText {

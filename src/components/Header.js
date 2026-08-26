@@ -27,12 +27,12 @@ export default function Header() {
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
       <div className={styles.inner}>
-        <Link href="/" aria-label="MH Defense — accueil">
+        <Link href="/" aria-label="MH Defense — accueil" className={styles.logoLink}>
           <Image
             src="/images/logo-white.svg"
             alt="MH Defense"
-            width={140}
-            height={140}
+            width={200}
+            height={80}
             className={styles.logo}
             priority
           />

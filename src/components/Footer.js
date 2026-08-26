@@ -4,7 +4,7 @@ import styles from "./Footer.module.css";
 
 const NAV = [
   { label: "Accueil", href: "/" },
-  { label: "Tarifs", href: "/tarifs" },
+  { label: "Formules", href: "/#formules" },
   { label: "L'instructrice", href: "/instructrice" },
   { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
@@ -46,7 +46,7 @@ export default function Footer() {
         <div className={styles.grid}>
           {/* Marque */}
           <div className={styles.brand}>
-            <Image src="/images/logo-white.png" alt="MH Defense" width={160} height={160} />
+            <Image src="/images/logo-white.svg" alt="MH Defense" width={220} height={110} className={styles.logo} />
             <p className={styles.brandText}>
               Cours de self-défense 100 % féminins à Sarrians, encadrés par une
               championne du monde de karaté. Reprenez confiance, révélez votre force.

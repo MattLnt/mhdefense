@@ -20,17 +20,22 @@
 .inner {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 26px 26px;
-  height: 84px;
+  padding: 12px 26px;
+  min-height: 96px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+.logoLink {
+  display: flex;
+  align-items: center;
+}
 .logo {
   display: block;
-  height: 100px;
-  width: auto;
+  height: 90px !important;
+  width: auto !important;
+  max-width: none !important;
 }
 
 .links {
@@ -93,7 +98,7 @@
 .mobileMenu {
   display: none;
   position: fixed;
-  top: 84px;
+  top: 96px;
   left: 0;
   right: 0;
   bottom: 0;
