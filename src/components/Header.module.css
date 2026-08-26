@@ -20,7 +20,7 @@
 .inner {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 0 26px;
+  padding: 26px 26px;
   height: 84px;
   display: flex;
   align-items: center;
