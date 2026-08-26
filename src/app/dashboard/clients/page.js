@@ -18,6 +18,8 @@ export default function ClientsPage() {
   const [q, setQ] = useState("");
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(null);
+  const [resilier, setResilier] = useState(null); // client dont on résilie l'abo
 
   const charger = useCallback(() => {
     setLoading(true);
@@ -59,6 +61,9 @@ export default function ClientsPage() {
         <div className={styles.list}>
           {clients.map((c) => {
             const st = c.subscription ? STATUS[c.subscription.status] : null;
+            // Résiliation possible seulement si abo actif ou en retard
+            const peutResilier =
+              c.subscription && ["ACTIVE", "PAST_DUE"].includes(c.subscription.status);
             return (
               <div key={c.id} className={styles.row}>
                 <div className={styles.avatar}>{initiale(c.name)}</div>
@@ -115,12 +120,136 @@ export default function ClientsPage() {
                     <b>{c.totalBookings}</b>
                     <span>séance{c.totalBookings > 1 ? "s" : ""}</span>
                   </div>
+
+                  {/* Menu actions (seulement si abo résiliable) */}
+                  {peutResilier && (
+                    <div className={styles.actions}>
+                      <button
+                        className={styles.actionsBtn}
+                        onClick={() => setMenuOpen(menuOpen === c.id ? null : c.id)}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" />
+                        </svg>
+                      </button>
+                      {menuOpen === c.id && (
+                        <div className={styles.menu}>
+                          <button
+                            className={`${styles.menuItem} ${styles.menuDanger}`}
+                            onClick={() => {
+                              setMenuOpen(null);
+                              setResilier(c);
+                            }}
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                              <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                            Résilier l'abonnement
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Modale de résiliation (2 modes) */}
+      {resilier && (
+        <ResiliationModal
+          client={resilier}
+          onClose={() => setResilier(null)}
+          onDone={() => {
+            setResilier(null);
+            charger();
+          }}
+        />
+      )}
     </>
+  );
+}
+
+/* ---------- Modale de résiliation ---------- */
+
+function ResiliationModal({ client, onClose, onDone }) {
+  const [mode, setMode] = useState("END_OF_TERM");
+  const [saving, setSaving] = useState(false);
+  const [erreur, setErreur] = useState(null);
+
+  async function confirmer() {
+    setErreur(null);
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/clients/${client.id}/subscription`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setErreur(d.error || "Erreur lors de la résiliation.");
+        setSaving(false);
+        return;
+      }
+      onDone();
+    } catch {
+      setErreur("Une erreur est survenue.");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={() => !saving && onClose()}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHead}>
+          <h3>Résilier l'abonnement</h3>
+          <button className={styles.close} onClick={onClose}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <p className={styles.modalIntro}>
+          Abonnement de <b>{client.name}</b>. Choisissez le mode de résiliation.
+          Aucun remboursement n'est effectué.
+        </p>
+
+        {erreur && <div className={styles.modalError}>{erreur}</div>}
+
+        <div className={styles.modeList}>
+          <button
+            className={`${styles.modeOpt} ${mode === "END_OF_TERM" ? styles.modeOn : ""}`}
+            onClick={() => setMode("END_OF_TERM")}
+          >
+            <div className={styles.modeRadio} />
+            <div>
+              <b>À l'échéance de l'engagement</b>
+              <span>Le client garde l'accès jusqu'à la fin de sa période. Recommandé.</span>
+            </div>
+          </button>
+          <button
+            className={`${styles.modeOpt} ${mode === "IMMEDIATE" ? styles.modeOn : ""}`}
+            onClick={() => setMode("IMMEDIATE")}
+          >
+            <div className={styles.modeRadio} />
+            <div>
+              <b>Immédiatement</b>
+              <span>L'abonnement s'arrête tout de suite, sans remboursement.</span>
+            </div>
+          </button>
+        </div>
+
+        <div className={styles.modalActions}>
+          <button className={styles.btnGhost} onClick={onClose} disabled={saving}>
+            Retour
+          </button>
+          <button className={styles.btnDanger} onClick={confirmer} disabled={saving}>
+            {saving ? "Résiliation…" : "Confirmer la résiliation"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
