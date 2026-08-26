@@ -210,7 +210,16 @@ export function ReservationProvider({ children }) {
       const holdRes = await fetch("/api/booking/hold", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startsAt: slots[0], type: "PONCTUEL", sessionType: type, participantsCount: nbPersonnes, isFreeTrial: false }),
+        body: JSON.stringify({
+          startsAt: slots[0],
+          type: "PONCTUEL",
+          sessionType: type,
+          participantsCount: nbPersonnes,
+          isFreeTrial: false,
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+        }),
       });
       const holdData = await holdRes.json();
       if (!holdRes.ok) {
