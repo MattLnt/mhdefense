@@ -107,16 +107,21 @@
 .row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 15px 0;
+  gap: 16px;
+  padding: 16px 0;
   border-top: 1px solid var(--glass-border);
 }
 .row:first-child {
   border-top: none;
 }
+
+/* Date/heure : bloc à gauche, largeur fixe */
 .when {
-  width: 92px;
+  width: 96px;
   flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .when b {
   font-size: 0.9rem;
@@ -128,6 +133,8 @@
   font-size: 0.8rem;
   color: var(--muted);
 }
+
+/* Infos client : prend l'espace disponible */
 .who {
   flex: 1;
   min-width: 0;
@@ -139,6 +146,7 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  margin-bottom: 3px;
 }
 .who p {
   font-size: 0.82rem;
@@ -160,26 +168,67 @@
 .tagAbo { color: #8ab4d9; background: rgba(90, 140, 190, 0.16); }
 .tagType { color: var(--muted); background: var(--rd); }
 
-.statusBadge {
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 999px;
+/* Bloc méta (solde + statut), aligné à droite avant le menu */
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex: none;
 }
-.stConfirmed { color: #4caf83; background: rgba(46, 125, 91, 0.15); }
-.stCompleted { color: var(--muted); background: var(--rd); }
-.stCancelled { color: #d98a9a; background: rgba(176, 35, 74, 0.14); }
-.stNoShow { color: #c9a24a; background: rgba(201, 162, 74, 0.14); }
+
+/* Badge de statut : couleur propre par statut (texte + fond + bordure) */
+.statusBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+/* Pastille colorée avant le texte */
+.statusBadge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.stConfirmed {
+  color: #4caf83;
+  background: rgba(46, 125, 91, 0.14);
+  border-color: rgba(46, 125, 91, 0.3);
+}
+.stCompleted {
+  color: #7fa8d0;
+  background: rgba(90, 140, 190, 0.14);
+  border-color: rgba(90, 140, 190, 0.3);
+}
+.stCancelled {
+  color: #e0748f;
+  background: rgba(214, 76, 127, 0.14);
+  border-color: rgba(214, 76, 127, 0.32);
+}
+.stNoShow {
+  color: #d09a3e;
+  background: rgba(201, 162, 74, 0.14);
+  border-color: rgba(201, 162, 74, 0.34);
+}
 
 .solde {
   font-size: 0.72rem;
-  font-weight: 600;
-  padding: 4px 10px;
+  font-weight: 700;
+  padding: 5px 12px;
   border-radius: 999px;
-  color: #d98a9a;
-  background: rgba(176, 35, 74, 0.14);
+  color: #d09a3e;
+  background: rgba(201, 162, 74, 0.14);
+  border: 1px solid rgba(201, 162, 74, 0.34);
   flex: none;
+  white-space: nowrap;
 }
 
 /* Menu actions */
@@ -188,8 +237,8 @@
   flex: none;
 }
 .actionsBtn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 9px;
   border: 1px solid var(--glass-border);
   background: var(--rd);
@@ -198,6 +247,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.actionsBtn:hover {
+  border-color: #d64c7f;
+  color: #f0699a;
 }
 .menu {
   position: absolute;
@@ -208,7 +262,7 @@
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 6px;
-  min-width: 180px;
+  min-width: 190px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 :global([data-theme="light"]) .menu {
@@ -238,10 +292,10 @@
   color: var(--muted);
 }
 .menuDanger {
-  color: #d98a9a;
+  color: #e0748f;
 }
 .menuDanger svg {
-  color: #d98a9a;
+  color: #e0748f;
 }
 
 .empty {
@@ -256,7 +310,7 @@
   text-align: center;
 }
 
-/* Modal création */
+/* Modal (overlay commun) */
 .overlay {
   position: fixed;
   inset: 0;
@@ -383,36 +437,112 @@
   font-size: 0.85rem;
 }
 
+/* Modal de confirmation d'annulation */
+.confirmModal {
+  background: var(--bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 30px 28px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+:global([data-theme="light"]) .confirmModal {
+  background: #fff;
+}
+.confirmIcon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(214, 76, 127, 0.12);
+  border: 1px solid rgba(214, 76, 127, 0.28);
+  color: #f0699a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+}
+.confirmModal h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+.confirmModal p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.confirmModal p b {
+  color: var(--txt);
+}
+.confirmActions {
+  display: flex;
+  gap: 10px;
+}
+.confirmCancel {
+  flex: 1;
+  padding: 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--glass-border);
+  background: none;
+  color: var(--txt);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.confirmCancel:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.confirmDanger {
+  flex: 1;
+  padding: 12px;
+  border-radius: 999px;
+  border: none;
+  background: #d64c7f;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.confirmDanger:hover:not(:disabled) {
+  background: #f0699a;
+}
+.confirmActions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .list {
     padding: 6px 16px;
   }
-
-  /* La ligne devient une grille : date | infos ... menu */
+  /* La ligne devient une grille : date | menu, puis infos, puis statut */
   .row {
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 10px 12px;
   }
-  /* Date à gauche */
   .when {
     width: auto;
     order: 1;
   }
-  /* Menu ⋮ tout à droite sur la même ligne que la date */
   .actions {
     order: 2;
     margin-left: auto;
   }
-  /* Infos client : ligne complète en dessous */
   .who {
     order: 3;
     flex-basis: 100%;
   }
-  /* Badge statut + solde : ligne complète en dessous, alignés à gauche */
-  .statusBadge,
-  .solde {
+  .meta {
     order: 4;
+    flex-basis: 100%;
+  }
+  .confirmActions {
+    flex-direction: column-reverse;
   }
 }

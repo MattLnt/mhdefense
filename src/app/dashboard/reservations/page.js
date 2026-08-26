@@ -30,6 +30,8 @@ export default function ReservationsPage() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(null); // booking à annuler
+  const [cancelling, setCancelling] = useState(false);
 
   const charger = useCallback(() => {
     setLoading(true);
@@ -49,7 +51,12 @@ export default function ReservationsPage() {
 
   async function action(id, act) {
     setMenuOpen(null);
-    if (act === "cancel" && !confirm("Annuler cette réservation ?")) return;
+    // L'annulation passe par la modale de confirmation
+    if (act === "cancel") {
+      const b = bookings.find((x) => x.id === id);
+      setConfirmCancel(b || { id });
+      return;
+    }
     try {
       const res = await fetch(`/api/admin/bookings/${id}`, {
         method: "PATCH",
@@ -58,6 +65,25 @@ export default function ReservationsPage() {
       });
       if (res.ok) charger();
     } catch {}
+  }
+
+  async function confirmerAnnulation() {
+    if (!confirmCancel) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/admin/bookings/${confirmCancel.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancel" }),
+      });
+      if (res.ok) {
+        setConfirmCancel(null);
+        charger();
+      }
+    } catch {
+    } finally {
+      setCancelling(false);
+    }
   }
 
   return (
@@ -135,12 +161,14 @@ export default function ReservationsPage() {
                   </p>
                 </div>
 
-                {soldeDu && (
-                  <span className={styles.solde}>Solde {Math.round(b.payment.amountDueOnSite / 100)} €</span>
-                )}
-                <span className={`${styles.statusBadge} ${styles[STATUS_CLASS[b.status]]}`}>
-                  {STATUS_LABEL[b.status]}
-                </span>
+                <div className={styles.meta}>
+                  {soldeDu && (
+                    <span className={styles.solde}>Solde {Math.round(b.payment.amountDueOnSite / 100)} €</span>
+                  )}
+                  <span className={`${styles.statusBadge} ${styles[STATUS_CLASS[b.status]]}`}>
+                    {STATUS_LABEL[b.status]}
+                  </span>
+                </div>
 
                 {/* Menu actions */}
                 <div className={styles.actions}>
@@ -194,6 +222,42 @@ export default function ReservationsPage() {
             charger();
           }}
         />
+      )}
+
+      {/* Modal de confirmation d'annulation */}
+      {confirmCancel && (
+        <div className={styles.overlay} onClick={() => !cancelling && setConfirmCancel(null)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmIcon}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                <path d="M12 9v4M12 17h.01" />
+              </svg>
+            </div>
+            <h3>Annuler cette réservation ?</h3>
+            <p>
+              {confirmCancel.clientName ? <><b>{confirmCancel.clientName}</b> — </> : ""}
+              {confirmCancel.startsAt ? `${jour(confirmCancel.startsAt)} à ${heure(confirmCancel.startsAt)}.` : ""}
+              {" "}Le créneau sera libéré et la cliente sera prévenue par email. Cette action est irréversible.
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.confirmCancel}
+                onClick={() => setConfirmCancel(null)}
+                disabled={cancelling}
+              >
+                Retour
+              </button>
+              <button
+                className={styles.confirmDanger}
+                onClick={confirmerAnnulation}
+                disabled={cancelling}
+              >
+                {cancelling ? "Annulation…" : "Confirmer l'annulation"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
