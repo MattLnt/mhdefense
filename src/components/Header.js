@@ -29,7 +29,7 @@ export default function Header() {
       <div className={styles.inner}>
         <Link href="/" aria-label="MH Defense — accueil">
           <Image
-            src="/images/logo-white.png"
+            src="/images/logo-white.svg"
             alt="MH Defense"
             width={140}
             height={140}
