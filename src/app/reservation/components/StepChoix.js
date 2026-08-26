@@ -1,12 +1,20 @@
 "use client";
 
 import TrialBanner from "@/components/TrialBanner";
-import { useReservation } from "./ReservationContext";
+import { useReservation, TYPES, PLANS } from "./ReservationContext";
 import { Arrow } from "./icons";
 import styles from "../Reservation.module.css";
 
 export default function StepChoix() {
-  const { choisir } = useReservation();
+  const { choisir, prixPonctuel, prixAbo } = useReservation();
+
+  // Prix ponctuel le plus bas (parmi tous les types)
+  const desUnite = Math.min(...TYPES.map((t) => prixPonctuel(t.key)));
+
+  // Prix d'abonnement mensuel le plus bas (tous types, tous plans, fréquence 1×/sem.)
+  const desAbo = Math.min(
+    ...TYPES.flatMap((t) => PLANS.map((p) => prixAbo(t.key, p.key, 1)))
+  );
 
   return (
     <div className={styles.step0}>
@@ -28,7 +36,7 @@ export default function StepChoix() {
           <h3>Une séance à l'unité</h3>
           <p>Réservez ponctuellement, quand vous le souhaitez. Sans compte ni engagement.</p>
           <div className={styles.choiceMeta}>
-            <span className={styles.choicePrice}>dès 45 €<span> / pers.</span></span>
+            <span className={styles.choicePrice}>dès {desUnite} €<span> / pers.</span></span>
             <span className={styles.choiceArrow}>Choisir <Arrow /></span>
           </div>
         </button>
@@ -43,7 +51,7 @@ export default function StepChoix() {
           <h3>Un abonnement mensuel</h3>
           <p>Un rythme régulier à tarif dégressif. 1 ou 2 séances par semaine.</p>
           <div className={styles.choiceMeta}>
-            <span className={styles.choicePrice}>dès 140 €<span> / mois</span></span>
+            <span className={styles.choicePrice}>dès {desAbo} €<span> / mois</span></span>
             <span className={styles.choiceArrow}>Choisir <Arrow /></span>
           </div>
         </button>
