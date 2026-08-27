@@ -3,17 +3,19 @@
 import { useState, useEffect } from "react";
 import styles from "./Profil.module.css";
 
+function initiale(name) {
+  return (name || "M").trim().charAt(0).toUpperCase();
+}
+
 export default function ProfilPage() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
 
-  // Infos
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [savingInfo, setSavingInfo] = useState(false);
-  const [infoMsg, setInfoMsg] = useState(null); // { type, text }
+  const [infoMsg, setInfoMsg] = useState(null);
 
-  // Mot de passe
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -98,17 +100,35 @@ export default function ProfilPage() {
   }
 
   return (
-    <>
+    <div className={styles.wrap}>
       <div className={styles.head}>
         <div className={styles.title}>Mon profil</div>
         <div className={styles.sub}>Gérez vos informations personnelles et votre sécurité.</div>
       </div>
 
+      {/* En-tête profil */}
+      <div className={styles.hero}>
+        <div className={styles.heroAvatar}>{initiale(name)}</div>
+        <div className={styles.heroInfo}>
+          <b>{name || "Mon compte"}</b>
+          <span>{email}</span>
+        </div>
+      </div>
+
       <div className={styles.grid}>
         {/* Informations */}
         <form className={styles.card} onSubmit={enregistrerInfos}>
-          <div className={styles.cardTitle}>Mes informations</div>
-          <div className={styles.cardSub}>Ces informations servent pour vos réservations.</div>
+          <div className={styles.cardHead}>
+            <div className={styles.cardIcon}>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+            </div>
+            <div>
+              <div className={styles.cardTitle}>Mes informations</div>
+              <div className={styles.cardSub}>Utilisées pour vos réservations.</div>
+            </div>
+          </div>
 
           {infoMsg && (
             <div className={`${styles.message} ${styles[infoMsg.type]}`}>
@@ -134,8 +154,8 @@ export default function ProfilPage() {
           <div className={styles.field}>
             <label htmlFor="email">Email</label>
             <input id="email" value={email} disabled />
+            <div className={styles.hint}>L'adresse email ne peut pas être modifiée.</div>
           </div>
-          <div className={styles.hint}>L'adresse email ne peut pas être modifiée.</div>
 
           <button className={styles.submit} disabled={savingInfo}>
             {savingInfo ? "Enregistrement…" : "Enregistrer"}
@@ -144,8 +164,17 @@ export default function ProfilPage() {
 
         {/* Mot de passe */}
         <form className={styles.card} onSubmit={changerMotDePasse}>
-          <div className={styles.cardTitle}>Mot de passe</div>
-          <div className={styles.cardSub}>Choisissez un mot de passe d'au moins 8 caractères.</div>
+          <div className={styles.cardHead}>
+            <div className={styles.cardIcon}>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 018 0v4" />
+              </svg>
+            </div>
+            <div>
+              <div className={styles.cardTitle}>Mot de passe</div>
+              <div className={styles.cardSub}>Au moins 8 caractères.</div>
+            </div>
+          </div>
 
           {pwdMsg && (
             <div className={`${styles.message} ${styles[pwdMsg.type]}`}>
@@ -178,6 +207,6 @@ export default function ProfilPage() {
           </button>
         </form>
       </div>
-    </>
+    </div>
   );
 }
