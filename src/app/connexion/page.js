@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { signIn, getSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./Connexion.module.css";
 
 function ConnexionForm() {
-  const router = useRouter();
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/compte";
+  const callbackUrl = params.get("callbackUrl");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,8 +34,19 @@ function ConnexionForm() {
       return;
     }
 
-    router.push(callbackUrl);
-    router.refresh();
+    // Récupère la session fraîche pour connaître le rôle
+    const session = await getSession();
+    const role = session?.user?.role;
+
+    // Destination : callbackUrl explicite sinon selon le rôle
+    let destination = callbackUrl;
+    if (!destination) {
+      destination = role === "ADMIN" ? "/dashboard" : "/compte";
+    }
+
+    // Rechargement complet (pas router.push) : garantit que la session
+    // serveur est relue et évite le moulinage au changement de compte.
+    window.location.href = destination;
   }
 
   return (
