@@ -302,33 +302,32 @@
 }
 .confirmActions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  justify-content: center;
 }
 .confirmGhost {
-  flex: 1;
-  padding: 12px;
+  padding: 9px 18px;
   border-radius: 999px;
   border: 1.5px solid var(--glass-border);
   background: none;
   color: var(--txt);
   font-family: inherit;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.86rem;
   cursor: pointer;
 }
 .confirmGhost:hover:not(:disabled) {
   border-color: var(--muted);
 }
 .confirmDanger {
-  flex: 1;
-  padding: 12px;
+  padding: 9px 18px;
   border-radius: 999px;
   border: none;
   background: #d64c7f;
   color: #fff;
   font-family: inherit;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.86rem;
   cursor: pointer;
 }
 .confirmDanger:hover:not(:disabled) {

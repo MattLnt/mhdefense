@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import UpdateCardModal from "@/components/UpdateCardModal";
 import styles from "./Abonnement.module.css";
 
 function formatDate(iso) {
@@ -18,6 +19,11 @@ export default function AbonnementPage() {
   const [cancelling, setCancelling] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // Mise à jour de carte
+  const [cardSecret, setCardSecret] = useState(null); // clientSecret du SetupIntent
+  const [cardLoading, setCardLoading] = useState(false);
+  const [cardMsg, setCardMsg] = useState(null);
 
   function charger() {
     setLoading(true);
@@ -50,6 +56,25 @@ export default function AbonnementPage() {
       setErreur("Une erreur est survenue. Réessayez.");
     } finally {
       setCancelling(false);
+    }
+  }
+
+  async function ouvrirMajCarte() {
+    setCardMsg(null);
+    setCardLoading(true);
+    try {
+      const res = await fetch("/api/me/subscription/update-card", { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) {
+        setCardMsg({ type: "error", text: d.error || "Impossible d'ouvrir la mise à jour." });
+        setCardLoading(false);
+        return;
+      }
+      setCardSecret(d.clientSecret);
+    } catch {
+      setCardMsg({ type: "error", text: "Une erreur est survenue. Réessayez." });
+    } finally {
+      setCardLoading(false);
     }
   }
 
@@ -165,8 +190,16 @@ export default function AbonnementPage() {
           <div className={styles.card}>
             <h3>Moyen de paiement</h3>
             <p>Votre carte est prélevée automatiquement chaque mois via Stripe.</p>
-            <button className={styles.btnOutline} disabled title="Bientôt disponible">
-              Mettre à jour ma carte
+            {cardMsg && (
+              <div
+                className={styles.error}
+                style={{ marginBottom: 12 }}
+              >
+                <span>{cardMsg.text}</span>
+              </div>
+            )}
+            <button className={styles.btnOutline} onClick={ouvrirMajCarte} disabled={cardLoading}>
+              {cardLoading ? "Ouverture…" : "Mettre à jour ma carte"}
             </button>
           </div>
 
@@ -222,6 +255,18 @@ export default function AbonnementPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modale de mise à jour de carte */}
+      {cardSecret && (
+        <UpdateCardModal
+          clientSecret={cardSecret}
+          onClose={() => setCardSecret(null)}
+          onSuccess={() => {
+            setCardSecret(null);
+            setCardMsg({ type: "success", text: "Votre carte a bien été mise à jour." });
+          }}
+        />
       )}
     </>
   );
