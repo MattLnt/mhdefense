@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import Image from "next/image";
 import styles from "./Compte.module.css";
 
 /* ---------- Icônes ---------- */
@@ -44,15 +45,12 @@ export default function CompteLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [theme, setTheme] = useState("dark");
   const [collapsed, setCollapsed] = useState(false);
   const [me, setMe] = useState(null);
 
-  // Restaure les préférences mémorisées
+  // Restaure l'état réduit/déployé mémorisé
   useEffect(() => {
-    const t = localStorage.getItem("mh_theme");
     const c = localStorage.getItem("mh_collapsed");
-    if (t) setTheme(t);
     if (c) setCollapsed(c === "1");
   }, []);
 
@@ -64,10 +62,6 @@ export default function CompteLayout({ children }) {
       .catch(() => {});
   }, []);
 
-  function changeTheme(t) {
-    setTheme(t);
-    localStorage.setItem("mh_theme", t);
-  }
   function toggleCollapsed() {
     setCollapsed((c) => {
       localStorage.setItem("mh_collapsed", !c ? "1" : "0");
@@ -83,20 +77,20 @@ export default function CompteLayout({ children }) {
   return (
     <div
       className={`${styles.shell} ${collapsed ? styles.collapsed : ""}`}
-      data-theme={theme}
+      data-theme="dark"
     >
       {/* ---------- Sidebar (desktop) ---------- */}
       <aside className={styles.side}>
         <div className={styles.topSide}>
           <div className={styles.brand}>
-            <div className={styles.mark}>MH</div>
-            <div className={styles.brandName}>MH DEFENSE</div>
+            <Image
+              src="/images/logo-white.svg"
+              alt="MH Defense"
+              width={200}
+              height={100}
+              className={styles.logo}
+            />
           </div>
-          <button className={styles.burger} onClick={toggleCollapsed} aria-label="Réduire le menu">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-              <path d="M3 6h18M3 12h18M3 18h18" />
-            </svg>
-          </button>
         </div>
 
         <nav className={styles.nav}>
@@ -105,6 +99,7 @@ export default function CompteLayout({ children }) {
               key={href}
               className={`${styles.navLink} ${isActive(href) ? styles.on : ""}`}
               onClick={() => router.push(href)}
+              title={collapsed ? label : undefined}
             >
               <Icon />
               <span className={styles.navLabel}>{label}</span>
@@ -132,33 +127,20 @@ export default function CompteLayout({ children }) {
         </div>
       </aside>
 
+      {/* Bouton toggle flottant (sur le bord de la sidebar) */}
+      <button
+        className={styles.toggleBtn}
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? "Déployer le menu" : "Réduire le menu"}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
       {/* ---------- Zone principale ---------- */}
       <main className={styles.main}>
-        <div className={styles.headRow}>
-          <div style={{ flex: 1 }} />
-          <div className={styles.themeToggle}>
-            <button
-              className={`${styles.themeOpt} ${theme === "dark" ? styles.act : ""}`}
-              onClick={() => changeTheme("dark")}
-              aria-label="Mode sombre"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" />
-              </svg>
-            </button>
-            <button
-              className={`${styles.themeOpt} ${theme === "light" ? styles.act : ""}`}
-              onClick={() => changeTheme("light")}
-              aria-label="Mode clair"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
+        <div className={styles.headRow} />
         {children}
       </main>
 
