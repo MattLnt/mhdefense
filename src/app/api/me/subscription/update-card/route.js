@@ -18,7 +18,6 @@ export async function POST() {
   }
 
   try {
-    // On récupère le customer Stripe (via le user ou son abonnement)
     const sub = await prisma.subscription.findFirst({
       where: {
         userId: session.user.id,
@@ -40,13 +39,24 @@ export async function POST() {
       );
     }
 
-    const intent = await stripe.setupIntents.create({
-      customer: customerId,
-      payment_method_types: ["card"],
-      usage: "off_session", // pour les prélèvements récurrents à venir
-    });
-
-    return NextResponse.json({ clientSecret: intent.client_secret });
+    try {
+      const intent = await stripe.setupIntents.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        usage: "off_session",
+      });
+      return NextResponse.json({ clientSecret: intent.client_secret });
+    } catch (stripeErr) {
+      // Customer introuvable côté Stripe (ex : compte de test avec un customer
+      // créé en mode test, alors qu'on est en mode live).
+      if (stripeErr?.code === "resource_missing") {
+        return NextResponse.json(
+          { error: "Compte de paiement introuvable. Contactez-nous pour mettre à jour votre carte." },
+          { status: 404 }
+        );
+      }
+      throw stripeErr;
+    }
   } catch (error) {
     console.error("[subscription/update-card]", error);
     return NextResponse.json(
