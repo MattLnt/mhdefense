@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import Image from "next/image";
 import styles from "./Dashboard.module.css";
 
 /* ---------- Icônes ---------- */
@@ -108,21 +109,21 @@ export default function DashboardLayout({ children }) {
       <aside className={styles.side}>
         <div className={styles.topSide}>
           <div className={styles.brand}>
-            <div className={styles.mark}>MH</div>
-            <div className={styles.brandName}>
-              MH DEFENSE
-              <small>Administration</small>
-            </div>
+            <Image
+              src="/images/logo-white.svg"
+              alt="MH Defense"
+              width={200}
+              height={100}
+              className={`${styles.logo} ${styles.logoDark}`}
+            />
+            <Image
+              src="/images/logo.svg"
+              alt="MH Defense"
+              width={200}
+              height={100}
+              className={`${styles.logo} ${styles.logoLight}`}
+            />
           </div>
-          <button
-            className={styles.burger}
-            onClick={toggleCollapsed}
-            aria-label={collapsed ? "Déployer le menu" : "Réduire le menu"}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-              <path d="M3 6h18M3 12h18M3 18h18" />
-            </svg>
-          </button>
         </div>
 
         <nav className={styles.nav}>
@@ -162,6 +163,17 @@ export default function DashboardLayout({ children }) {
           </div>
         </div>
       </aside>
+
+      {/* Bouton toggle flottant (sur le bord de la sidebar) */}
+      <button
+        className={styles.toggleBtn}
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? "Déployer le menu" : "Réduire le menu"}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
 
       {/* ---------- Zone principale ---------- */}
       <main className={styles.main}>

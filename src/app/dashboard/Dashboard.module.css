@@ -1,5 +1,5 @@
 /* Dashboard admin — layout Dark Glass.
-   Desktop : sidebar rétractable (burger en haut, à côté du logo).
+   Desktop : sidebar rétractable (bouton toggle flottant sur le bord).
    Mobile : bottom bar fixe. */
 
 .shell {
@@ -67,76 +67,73 @@
 .topSide {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 8px;
-  padding: 0 6px 22px;
+  padding: 4px 6px 24px;
 }
 .brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   overflow: hidden;
+  width: 100%;
 }
-.mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: linear-gradient(150deg, #f0699a, #d64c7f);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 0.82rem;
-  color: #fff;
-  flex: none;
+/* Logo : deux versions, on affiche selon le thème */
+.logo {
+  height: 54px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
 }
-.brandName {
-  font-weight: 700;
-  font-size: 0.82rem;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  line-height: 1.2;
-}
-.brandName small {
+.logoDark {
   display: block;
-  font-size: 0.66rem;
-  color: var(--muted);
-  font-weight: 500;
-  letter-spacing: 0.06em;
 }
-.burger {
-  cursor: pointer;
-  color: var(--muted);
-  flex: none;
-  background: none;
-  border: none;
-  padding: 6px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.18s, background 0.18s;
+.logoLight {
+  display: none;
 }
-.burger:hover {
-  color: var(--txt);
-  background: var(--nav-hover);
+.shell[data-theme="light"] .logoDark {
+  display: none;
+}
+.shell[data-theme="light"] .logoLight {
+  display: block;
+}
+/* Logo réduit en mode collapsed */
+.collapsed .logo {
+  height: 40px;
 }
 
-/* En mode rétracté : le logo se cache, le burger se centre */
-.collapsed .brandName {
-  opacity: 0;
-  width: 0;
-}
-.collapsed .topSide {
-  flex-direction: column;
+/* ---------- Bouton toggle flottant (sur le bord de la sidebar) ---------- */
+.toggleBtn {
+  position: absolute;
+  top: 26px;
+  left: calc(250px - 15px);
+  z-index: 20;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--side-border);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 0 22px;
-}
-.collapsed .brand {
   justify-content: center;
-  gap: 0;
-  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: left 0.3s ease, color 0.18s, background 0.18s, border-color 0.18s;
+}
+.toggleBtn:hover {
+  color: #f0699a;
+  border-color: #d64c7f;
+}
+.collapsed .toggleBtn {
+  left: calc(82px - 15px);
+}
+.toggleBtn svg {
+  transition: transform 0.3s ease;
+}
+.collapsed .toggleBtn svg {
+  transform: rotate(180deg);
 }
 
 .navSection {
@@ -330,6 +327,9 @@
     grid-template-columns: 1fr;
   }
   .side {
+    display: none;
+  }
+  .toggleBtn {
     display: none;
   }
   .main {
