@@ -20,8 +20,7 @@ export default function AbonnementPage() {
   const [erreur, setErreur] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Mise à jour de carte
-  const [cardSecret, setCardSecret] = useState(null); // clientSecret du SetupIntent
+  const [cardSecret, setCardSecret] = useState(null);
   const [cardLoading, setCardLoading] = useState(false);
   const [cardMsg, setCardMsg] = useState(null);
 
@@ -85,7 +84,7 @@ export default function AbonnementPage() {
   // Aucun abonnement
   if (!sub) {
     return (
-      <>
+      <div className={styles.wrap}>
         <div className={styles.head}>
           <div className={styles.title}>Mon abonnement</div>
           <div className={styles.sub}>Gérez votre formule et vos préférences.</div>
@@ -95,7 +94,7 @@ export default function AbonnementPage() {
           <p>Souscrivez une formule pour profiter de séances régulières à tarif dégressif.</p>
           <a href="/reservation">Découvrir les abonnements</a>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -117,7 +116,7 @@ export default function AbonnementPage() {
   };
 
   return (
-    <>
+    <div className={styles.wrap}>
       <div className={styles.head}>
         <div className={styles.title}>Mon abonnement</div>
         <div className={styles.sub}>Gérez votre formule et vos préférences.</div>
@@ -144,82 +143,85 @@ export default function AbonnementPage() {
         </div>
       )}
 
-      <div className={styles.grid}>
-        {/* Carte principale */}
-        <div className={styles.main}>
-          <div className={styles.planRow}>
-            <div>
-              <div className={styles.planName}>{sub.planLabel}</div>
-              <div className={styles.planTag}>{sub.sessionLabel}</div>
-            </div>
-            <div className={styles.price}>
-              <div className={styles.priceValue}>
-                {Math.round(sub.monthlyAmount / 100)} €<small> / mois</small>
-              </div>
-            </div>
+      {/* Hero : formule + prix + statut */}
+      <div className={styles.hero}>
+        <div className={styles.heroGlow} />
+        <div className={styles.heroContent}>
+          <div className={styles.heroLeft}>
+            <div className={styles.planName}>{sub.planLabel}</div>
+            <div className={styles.planTag}>{sub.sessionLabel}</div>
+            <div className={styles.heroStatus}>{statusBadge()}</div>
           </div>
-
-          <div className={styles.meta}>
-            <div className={styles.metaRow}>
-              <span>Rythme</span>
-              <span>{FREQ_LABEL[sub.frequency]}</span>
-            </div>
-            {sub.participantsCount > 1 && (
-              <div className={styles.metaRow}>
-                <span>Participants</span>
-                <span>{sub.participantsCount} personnes</span>
-              </div>
-            )}
-            <div className={styles.metaRow}>
-              <span>Engagement</span>
-              <span>{sub.engagementMonths} mois</span>
-            </div>
-            <div className={styles.metaRow}>
-              <span>Fin d'engagement</span>
-              <span>{formatDate(sub.engagementEndsAt)}</span>
-            </div>
-            <div className={styles.metaRow}>
-              <span>Statut</span>
-              <span>{statusBadge()}</span>
-            </div>
+          <div className={styles.heroPrice}>
+            <span className={styles.priceValue}>{Math.round(sub.monthlyAmount / 100)} €</span>
+            <span className={styles.priceUnit}>par mois</span>
           </div>
         </div>
+      </div>
 
-        {/* Actions */}
-        <div className={styles.aside}>
-          <div className={styles.card}>
-            <h3>Moyen de paiement</h3>
-            <p>Votre carte est prélevée automatiquement chaque mois via Stripe.</p>
-            {cardMsg && (
-              <div
-                className={styles.error}
-                style={{ marginBottom: 12 }}
-              >
-                <span>{cardMsg.text}</span>
-              </div>
-            )}
-            <button className={styles.btnOutline} onClick={ouvrirMajCarte} disabled={cardLoading}>
-              {cardLoading ? "Ouverture…" : "Mettre à jour ma carte"}
-            </button>
+      {/* Blocs d'infos alignés */}
+      <div className={styles.stats}>
+        <div className={styles.stat}>
+          <span>Rythme</span>
+          <b>{FREQ_LABEL[sub.frequency]}</b>
+        </div>
+        <div className={styles.stat}>
+          <span>Engagement</span>
+          <b>{sub.engagementMonths} mois</b>
+        </div>
+        <div className={styles.stat}>
+          <span>Fin d'engagement</span>
+          <b>{formatDate(sub.engagementEndsAt)}</b>
+        </div>
+        {sub.participantsCount > 1 && (
+          <div className={styles.stat}>
+            <span>Participants</span>
+            <b>{sub.participantsCount} personnes</b>
           </div>
+        )}
+      </div>
 
-          {!estResilie && (
-            <div className={styles.card}>
-              <h3>Résilier</h3>
-              <p>
-                La résiliation prend effet à la fin de votre engagement. Vous
-                gardez l'accès à vos séances jusque-là.
-              </p>
-              <button
-                className={styles.btnDanger}
-                onClick={() => setShowConfirm(true)}
-                disabled={cancelling}
-              >
-                Résilier mon abonnement
-              </button>
+      {/* Actions */}
+      <div className={styles.actions}>
+        <div className={styles.card}>
+          <div className={styles.cardIcon}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" />
+            </svg>
+          </div>
+          <h3>Moyen de paiement</h3>
+          <p>Votre carte est prélevée automatiquement chaque mois via Stripe.</p>
+          {cardMsg && (
+            <div className={cardMsg.type === "success" ? styles.cardOk : styles.cardErr}>
+              {cardMsg.text}
             </div>
           )}
+          <button className={styles.btnOutline} onClick={ouvrirMajCarte} disabled={cardLoading}>
+            {cardLoading ? "Ouverture…" : "Mettre à jour ma carte"}
+          </button>
         </div>
+
+        {!estResilie && (
+          <div className={styles.card}>
+            <div className={styles.cardIcon}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </div>
+            <h3>Résilier</h3>
+            <p>
+              La résiliation prend effet à la fin de votre engagement. Vous
+              gardez l'accès à vos séances jusque-là.
+            </p>
+            <button
+              className={styles.btnDanger}
+              onClick={() => setShowConfirm(true)}
+              disabled={cancelling}
+            >
+              Résilier mon abonnement
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modale de confirmation de résiliation */}
@@ -268,6 +270,6 @@ export default function AbonnementPage() {
           }}
         />
       )}
-    </>
+    </div>
   );
 }
