@@ -48,13 +48,11 @@ export default function CompteLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [me, setMe] = useState(null);
 
-  // Restaure l'état réduit/déployé mémorisé
   useEffect(() => {
     const c = localStorage.getItem("mh_collapsed");
     if (c) setCollapsed(c === "1");
   }, []);
 
-  // Charge le profil (nom / email)
   useEffect(() => {
     fetch("/api/me")
       .then((r) => (r.ok ? r.json() : null))
@@ -91,6 +89,15 @@ export default function CompteLayout({ children }) {
               className={styles.logo}
             />
           </div>
+          <button
+            className={styles.burger}
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? "Déployer le menu" : "Réduire le menu"}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+              <path d="M3 6h18M3 12h18M3 18h18" />
+            </svg>
+          </button>
         </div>
 
         <nav className={styles.nav}>
@@ -126,17 +133,6 @@ export default function CompteLayout({ children }) {
           </div>
         </div>
       </aside>
-
-      {/* Bouton toggle flottant (sur le bord de la sidebar) */}
-      <button
-        className={styles.toggleBtn}
-        onClick={toggleCollapsed}
-        aria-label={collapsed ? "Déployer le menu" : "Réduire le menu"}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
 
       {/* ---------- Zone principale ---------- */}
       <main className={styles.main}>
