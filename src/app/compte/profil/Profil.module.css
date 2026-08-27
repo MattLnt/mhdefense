@@ -1,8 +1,7 @@
 /* Mon profil — en-tête + 2 cartes alignées (Dark Glass premium). */
 
 .wrap {
-  max-width: 940px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .head {
