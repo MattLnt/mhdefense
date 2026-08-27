@@ -1,4 +1,4 @@
-/* Dashboard admin — layout Dark Glass.
+/* Dashboard admin — layout Dark Glass (thème sombre unique).
    Desktop : sidebar rétractable (bouton toggle flottant sur le bord).
    Mobile : bottom bar fixe. */
 
@@ -21,20 +21,7 @@
   background: var(--bg);
   color: var(--txt);
   position: relative;
-  transition: grid-template-columns 0.3s ease, background 0.35s ease, color 0.35s ease;
-}
-.shell[data-theme="light"] {
-  --bg: #fbf9f8;
-  --txt: #1a1414;
-  --side-border: #ece4e3;
-  --muted: #8b7e7c;
-  --glass: #ffffff;
-  --glass-border: #ece4e3;
-  --nav-hover: #fff5f8;
-  --rd: #f4eee9;
-  --halo: rgba(214, 76, 127, 0.14);
-  --bar-bg: rgba(255, 255, 255, 0.95);
-  --active-bg: rgba(214, 76, 127, 0.12);
+  transition: grid-template-columns 0.3s ease;
 }
 .shell.collapsed {
   grid-template-columns: 82px 1fr;
@@ -79,26 +66,12 @@
   overflow: hidden;
   width: 100%;
 }
-/* Logo : deux versions, on affiche selon le thème */
 .logo {
   height: 54px;
   width: auto;
   max-width: 100%;
   object-fit: contain;
 }
-.logoDark {
-  display: block;
-}
-.logoLight {
-  display: none;
-}
-.shell[data-theme="light"] .logoDark {
-  display: none;
-}
-.shell[data-theme="light"] .logoLight {
-  display: block;
-}
-/* Logo réduit en mode collapsed */
 .collapsed .logo {
   height: 40px;
 }
@@ -290,31 +263,7 @@
   justify-content: flex-end;
   gap: 16px;
   margin-bottom: 20px;
-}
-.themeToggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  border-radius: 999px;
-  padding: 5px;
-}
-.themeOpt {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.themeOpt.act {
-  background: #d64c7f;
-  color: #fff;
+  min-height: 30px;
 }
 
 /* ---------- Bottom bar (mobile) ---------- */

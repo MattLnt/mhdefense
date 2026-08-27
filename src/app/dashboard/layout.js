@@ -69,14 +69,11 @@ export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [theme, setTheme] = useState("dark");
   const [collapsed, setCollapsed] = useState(false);
   const [me, setMe] = useState(null);
 
   useEffect(() => {
-    const t = localStorage.getItem("mh_admin_theme");
     const c = localStorage.getItem("mh_admin_collapsed");
-    if (t) setTheme(t);
     if (c) setCollapsed(c === "1");
   }, []);
 
@@ -87,10 +84,6 @@ export default function DashboardLayout({ children }) {
       .catch(() => {});
   }, []);
 
-  function changeTheme(t) {
-    setTheme(t);
-    localStorage.setItem("mh_admin_theme", t);
-  }
   function toggleCollapsed() {
     setCollapsed((c) => {
       localStorage.setItem("mh_admin_collapsed", !c ? "1" : "0");
@@ -104,7 +97,7 @@ export default function DashboardLayout({ children }) {
   const initial = (me?.name || "A").trim().charAt(0).toUpperCase();
 
   return (
-    <div className={`${styles.shell} ${collapsed ? styles.collapsed : ""}`} data-theme={theme}>
+    <div className={`${styles.shell} ${collapsed ? styles.collapsed : ""}`} data-theme="dark">
       {/* ---------- Sidebar ---------- */}
       <aside className={styles.side}>
         <div className={styles.topSide}>
@@ -114,14 +107,7 @@ export default function DashboardLayout({ children }) {
               alt="MH Defense"
               width={200}
               height={100}
-              className={`${styles.logo} ${styles.logoDark}`}
-            />
-            <Image
-              src="/images/logo.svg"
-              alt="MH Defense"
-              width={200}
-              height={100}
-              className={`${styles.logo} ${styles.logoLight}`}
+              className={styles.logo}
             />
           </div>
         </div>
@@ -177,30 +163,7 @@ export default function DashboardLayout({ children }) {
 
       {/* ---------- Zone principale ---------- */}
       <main className={styles.main}>
-        <div className={styles.headRow}>
-          <div className={styles.themeToggle}>
-            <button
-              className={`${styles.themeOpt} ${theme === "dark" ? styles.act : ""}`}
-              onClick={() => changeTheme("dark")}
-              aria-label="Mode sombre"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" />
-              </svg>
-            </button>
-            <button
-              className={`${styles.themeOpt} ${theme === "light" ? styles.act : ""}`}
-              onClick={() => changeTheme("light")}
-              aria-label="Mode clair"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
+        <div className={styles.headRow} />
         {children}
       </main>
 
