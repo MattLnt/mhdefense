@@ -17,6 +17,7 @@ export default function AbonnementPage() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [erreur, setErreur] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   function charger() {
     setLoading(true);
@@ -32,12 +33,6 @@ export default function AbonnementPage() {
   }, []);
 
   async function resilier() {
-    if (
-      !confirm(
-        "Votre abonnement restera actif jusqu'à la fin de votre engagement, puis ne sera pas renouvelé. Confirmer la résiliation ?"
-      )
-    )
-      return;
     setErreur(null);
     setCancelling(true);
     try {
@@ -45,9 +40,11 @@ export default function AbonnementPage() {
       const d = await res.json();
       if (!res.ok) {
         setErreur(d.error || "Impossible de résilier l'abonnement.");
+        setShowConfirm(false);
         setCancelling(false);
         return;
       }
+      setShowConfirm(false);
       charger();
     } catch (e) {
       setErreur("Une erreur est survenue. Réessayez.");
@@ -182,15 +179,50 @@ export default function AbonnementPage() {
               </p>
               <button
                 className={styles.btnDanger}
-                onClick={resilier}
+                onClick={() => setShowConfirm(true)}
                 disabled={cancelling}
               >
-                {cancelling ? "Traitement…" : "Résilier mon abonnement"}
+                Résilier mon abonnement
               </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Modale de confirmation de résiliation */}
+      {showConfirm && (
+        <div className={styles.overlay} onClick={() => !cancelling && setShowConfirm(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmIcon}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                <path d="M12 9v4M12 17h.01" />
+              </svg>
+            </div>
+            <h3>Résilier votre abonnement ?</h3>
+            <p>
+              Votre abonnement restera actif jusqu'au <b>{formatDate(sub.engagementEndsAt)}</b>,
+              puis ne sera pas renouvelé. Vous gardez l'accès à vos séances jusque-là.
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.confirmGhost}
+                onClick={() => setShowConfirm(false)}
+                disabled={cancelling}
+              >
+                Retour
+              </button>
+              <button
+                className={styles.confirmDanger}
+                onClick={resilier}
+                disabled={cancelling}
+              >
+                {cancelling ? "Traitement…" : "Confirmer la résiliation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

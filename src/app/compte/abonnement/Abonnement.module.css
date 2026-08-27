@@ -250,6 +250,95 @@
   text-align: center;
 }
 
+/* Modale de confirmation de résiliation */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.confirmModal {
+  background: var(--bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 30px 28px;
+  width: 100%;
+  max-width: 410px;
+  text-align: center;
+}
+:global([data-theme="light"]) .confirmModal {
+  background: #fff;
+}
+.confirmIcon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(214, 76, 127, 0.12);
+  border: 1px solid rgba(214, 76, 127, 0.28);
+  color: #f0699a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+}
+.confirmModal h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+.confirmModal p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.confirmModal p b {
+  color: var(--txt);
+}
+.confirmActions {
+  display: flex;
+  gap: 10px;
+}
+.confirmGhost {
+  flex: 1;
+  padding: 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--glass-border);
+  background: none;
+  color: var(--txt);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.confirmGhost:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.confirmDanger {
+  flex: 1;
+  padding: 12px;
+  border-radius: 999px;
+  border: none;
+  background: #d64c7f;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.confirmDanger:hover:not(:disabled) {
+  background: #f0699a;
+}
+.confirmActions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 820px) {
   .grid {
