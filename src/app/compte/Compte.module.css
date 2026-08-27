@@ -1,5 +1,5 @@
 /* Espace membre — layout Dark Glass (thème sombre unique).
-   Desktop : sidebar rétractable (hamburger intérieur type Skillio).
+   Desktop : sidebar fixe (sticky) rétractable, hamburger intérieur.
    Mobile  : bottom bar fixe (icônes + titres). */
 
 .shell {
@@ -37,14 +37,18 @@
   pointer-events: none;
 }
 
-/* ---------- Sidebar (desktop) ---------- */
+/* ---------- Sidebar (fixe / sticky) ---------- */
 .side {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
   border-right: 1px solid var(--side-border);
   padding: 22px 14px;
   display: flex;
   flex-direction: column;
-  position: relative;
   z-index: 2;
+  overflow-y: auto;
 }
 .collapsed .side {
   padding: 22px 10px;
@@ -57,6 +61,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 2px 4px 24px;
+  flex: none;
 }
 .brand {
   display: flex;
@@ -147,28 +152,32 @@
   border-radius: 12px;
 }
 
+/* ---------- Pied : bloc utilisateur ---------- */
 .foot {
   margin-top: auto;
+  padding-top: 16px;
+  flex: none;
 }
 .userBox {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 11px;
-  border-radius: 12px;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: 14px;
   background: var(--glass);
   border: 1px solid var(--glass-border);
   overflow: hidden;
 }
 .avatar {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(150deg, #f0699a, #d64c7f);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
+  font-size: 0.9rem;
   color: #fff;
   flex: none;
 }
@@ -179,26 +188,34 @@
 }
 .userInfo b {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.83rem;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .userInfo span {
+  display: block;
   font-size: 0.72rem;
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .logoutBtn {
   background: none;
   border: none;
   color: var(--muted);
   cursor: pointer;
-  padding: 2px;
+  padding: 7px;
   flex: none;
-  transition: color 0.18s;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s, background 0.18s;
 }
 .logoutBtn:hover {
   color: #f0699a;
+  background: var(--nav-hover);
 }
 /* Réduit : avatar seul, centré */
 .collapsed .userBox {
@@ -221,6 +238,7 @@
   padding: 26px 34px 60px;
   position: relative;
   z-index: 2;
+  min-width: 0;
 }
 .headRow {
   display: flex;
