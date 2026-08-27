@@ -37,8 +37,9 @@ function fullDate(iso) {
 export default function SeancesPage() {
   const [data, setData] = useState({ upcoming: [], past: [] });
   const [loading, setLoading] = useState(true);
-  const [cancelling, setCancelling] = useState(null); // id en cours
+  const [cancelling, setCancelling] = useState(false);
   const [erreur, setErreur] = useState(null);
+  const [confirmCancel, setConfirmCancel] = useState(null); // séance à annuler
 
   function charger() {
     setLoading(true);
@@ -53,23 +54,25 @@ export default function SeancesPage() {
     charger();
   }, []);
 
-  async function annuler(id) {
-    if (!confirm("Confirmer l'annulation de cette séance ?")) return;
+  async function confirmerAnnulation() {
+    if (!confirmCancel) return;
     setErreur(null);
-    setCancelling(id);
+    setCancelling(true);
     try {
-      const res = await fetch(`/api/me/bookings/${id}/cancel`, { method: "POST" });
+      const res = await fetch(`/api/me/bookings/${confirmCancel.id}/cancel`, { method: "POST" });
       const d = await res.json();
       if (!res.ok) {
         setErreur(d.error || "Impossible d'annuler cette séance.");
-        setCancelling(null);
+        setConfirmCancel(null);
+        setCancelling(false);
         return;
       }
-      charger(); // recharge les listes
+      setConfirmCancel(null);
+      charger();
     } catch (e) {
       setErreur("Une erreur est survenue. Réessayez.");
     } finally {
-      setCancelling(null);
+      setCancelling(false);
     }
   }
 
@@ -117,10 +120,10 @@ export default function SeancesPage() {
                 </span>
                 <button
                   className={styles.cancelBtn}
-                  disabled={cancelling === b.id}
-                  onClick={() => annuler(b.id)}
+                  disabled={cancelling}
+                  onClick={() => setConfirmCancel(b)}
                 >
-                  {cancelling === b.id ? "…" : "Annuler"}
+                  Annuler
                 </button>
               </div>
             ))
@@ -153,6 +156,42 @@ export default function SeancesPage() {
           )}
         </div>
       </div>
+
+      {/* Modale de confirmation d'annulation */}
+      {confirmCancel && (
+        <div className={styles.overlay} onClick={() => !cancelling && setConfirmCancel(null)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmIcon}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                <path d="M12 9v4M12 17h.01" />
+              </svg>
+            </div>
+            <h3>Annuler cette séance ?</h3>
+            <p>
+              <b>{confirmCancel.isFreeTrial ? "Séance d'essai" : TYPE_SESSION[confirmCancel.sessionType]}</b>
+              {" "}— {fullDate(confirmCancel.startsAt)}.
+              {" "}Cette action est définitive.
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.confirmGhost}
+                onClick={() => setConfirmCancel(null)}
+                disabled={cancelling}
+              >
+                Retour
+              </button>
+              <button
+                className={styles.confirmDanger}
+                onClick={confirmerAnnulation}
+                disabled={cancelling}
+              >
+                {cancelling ? "Annulation…" : "Confirmer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

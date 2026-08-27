@@ -50,6 +50,7 @@
   height: 50px;
   border-radius: 12px;
   background: var(--rd);
+  border: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -64,7 +65,9 @@
 .rdate span {
   font-size: 0.6rem;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--muted);
+  margin-top: 2px;
 }
 .rinfo {
   flex: 1;
@@ -73,34 +76,53 @@
 .rinfo h4 {
   font-size: 0.95rem;
   font-weight: 600;
+  margin-bottom: 2px;
 }
 .rinfo p {
   font-size: 0.83rem;
   color: var(--muted);
+  text-transform: capitalize;
 }
 
 .status {
   font-size: 0.74rem;
-  font-weight: 600;
-  padding: 4px 11px;
+  font-weight: 700;
+  padding: 5px 12px;
   border-radius: 999px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
   flex: none;
 }
 .stConfirmed {
   color: #4caf83;
-  background: rgba(46, 125, 91, 0.15);
+  background: rgba(46, 125, 91, 0.14);
+  border-color: rgba(46, 125, 91, 0.3);
 }
 .stCompleted {
-  color: var(--muted);
-  background: var(--rd);
+  color: #7fa8d0;
+  background: rgba(90, 140, 190, 0.14);
+  border-color: rgba(90, 140, 190, 0.3);
 }
 .stCancelled {
-  color: #d98a9a;
-  background: rgba(176, 35, 74, 0.14);
+  color: #e0748f;
+  background: rgba(214, 76, 127, 0.14);
+  border-color: rgba(214, 76, 127, 0.32);
 }
 .stNoShow {
-  color: #c9a24a;
+  color: #d09a3e;
   background: rgba(201, 162, 74, 0.14);
+  border-color: rgba(201, 162, 74, 0.34);
 }
 
 .cancelBtn {
@@ -154,13 +176,100 @@
   text-align: center;
 }
 
+/* Modale d'annulation */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.confirmModal {
+  background: var(--bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 30px 28px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+:global([data-theme="light"]) .confirmModal {
+  background: #fff;
+}
+.confirmIcon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(214, 76, 127, 0.12);
+  border: 1px solid rgba(214, 76, 127, 0.28);
+  color: #f0699a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+}
+.confirmModal h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+.confirmModal p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.confirmModal p b {
+  color: var(--txt);
+}
+.confirmActions {
+  display: flex;
+  gap: 10px;
+}
+.confirmGhost {
+  flex: 1;
+  padding: 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--glass-border);
+  background: none;
+  color: var(--txt);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.confirmGhost:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.confirmDanger {
+  flex: 1;
+  padding: 12px;
+  border-radius: 999px;
+  border: none;
+  background: #d64c7f;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.confirmDanger:hover:not(:disabled) {
+  background: #f0699a;
+}
+.confirmActions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 560px) {
   .card {
     padding: 8px 16px;
   }
-
-  /* Ligne séance : date + infos en haut, statut + bouton dessous */
   .resa {
     flex-wrap: wrap;
     gap: 10px 12px;
@@ -175,5 +284,8 @@
   .cancelBtn {
     order: 4;
     margin-left: auto;
+  }
+  .confirmActions {
+    flex-direction: column-reverse;
   }
 }
