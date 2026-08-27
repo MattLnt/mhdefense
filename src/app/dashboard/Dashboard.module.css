@@ -1,5 +1,5 @@
 /* Dashboard admin — layout Dark Glass (thème sombre unique).
-   Desktop : sidebar rétractable (bouton toggle flottant sur le bord).
+   Desktop : sidebar rétractable (hamburger intérieur type Skillio).
    Mobile : bottom bar fixe. */
 
 .shell {
@@ -51,62 +51,52 @@
 .collapsed .side {
   padding: 20px 10px;
 }
+
+/* Barre du haut : logo à gauche + hamburger à droite */
 .topSide {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 8px;
-  padding: 4px 6px 24px;
+  padding: 2px 4px 24px;
 }
 .brand {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
   overflow: hidden;
-  width: 100%;
+  min-width: 0;
 }
 .logo {
-  height: 54px;
+  height: 50px;
   width: auto;
   max-width: 100%;
   object-fit: contain;
 }
-.collapsed .logo {
-  height: 40px;
+/* Réduit : le logo disparaît, le hamburger se centre */
+.collapsed .topSide {
+  justify-content: center;
+  padding: 2px 0 24px;
+}
+.collapsed .brand {
+  display: none;
 }
 
-/* ---------- Bouton toggle flottant (sur le bord de la sidebar) ---------- */
-.toggleBtn {
-  position: absolute;
-  top: 26px;
-  left: calc(250px - 15px);
-  z-index: 20;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--bg);
-  border: 1px solid var(--side-border);
-  color: var(--muted);
+.burger {
   cursor: pointer;
+  color: var(--muted);
+  flex: none;
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transition: left 0.3s ease, color 0.18s, background 0.18s, border-color 0.18s;
+  transition: color 0.18s, background 0.18s;
 }
-.toggleBtn:hover {
-  color: #f0699a;
-  border-color: #d64c7f;
-}
-.collapsed .toggleBtn {
-  left: calc(82px - 15px);
-}
-.toggleBtn svg {
-  transition: transform 0.3s ease;
-}
-.collapsed .toggleBtn svg {
-  transform: rotate(180deg);
+.burger:hover {
+  color: var(--txt);
+  background: var(--nav-hover);
 }
 
 .navSection {
@@ -263,7 +253,7 @@
   justify-content: flex-end;
   gap: 16px;
   margin-bottom: 20px;
-  min-height: 30px;
+  min-height: 10px;
 }
 
 /* ---------- Bottom bar (mobile) ---------- */
@@ -276,9 +266,6 @@
     grid-template-columns: 1fr;
   }
   .side {
-    display: none;
-  }
-  .toggleBtn {
     display: none;
   }
   .main {
