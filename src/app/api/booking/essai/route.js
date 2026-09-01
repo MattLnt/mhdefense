@@ -5,6 +5,7 @@ import {
   emailConfirmationReservation,
   emailNotificationAdmin,
 } from "@/lib/email-templates";
+import { formatDateHeure } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
@@ -83,13 +84,7 @@ export async function POST(request) {
       select: { id: true },
     });
 
-    const dateHeure = new Intl.DateTimeFormat("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(start);
+    const dateHeure = formatDateHeure(start);
 
     // Email de confirmation au client (best-effort)
     try {
@@ -102,7 +97,6 @@ export async function POST(request) {
           formule: typeInfo.label,
           dateHeure,
           duree: "1 heure",
-          lieu: "Sarrians (84)",
           isEssai: true,
         }),
       });

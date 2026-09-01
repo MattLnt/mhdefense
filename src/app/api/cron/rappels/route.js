@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
 import { emailRappelSeance } from "@/lib/email-templates";
+import { formatDateHeure } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
@@ -20,14 +21,13 @@ const TYPE_LABELS = {
  * Protégé par le header Authorization: Bearer <CRON_SECRET>.
  */
 export async function GET(request) {
-  // Sécurité : seul Vercel Cron (avec le secret) peut déclencher
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 
   try {
-    // Fenêtre = journée de demain (00:00 → 23:59:59), en heure locale du serveur
+    // Fenêtre = journée de demain (00:00 → 23:59:59)
     const now = new Date();
     const debutDemain = new Date(now);
     debutDemain.setDate(debutDemain.getDate() + 1);
@@ -56,13 +56,7 @@ export async function GET(request) {
         continue;
       }
 
-      const dateHeure = new Intl.DateTimeFormat("fr-FR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(b.startsAt);
+      const dateHeure = formatDateHeure(b.startsAt);
 
       const formule = b.isFreeTrial
         ? "Séance d'essai"
