@@ -17,10 +17,10 @@ const STATUS_CLASS = {
 };
 
 function jour(iso) {
-  return new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short" }).format(new Date(iso));
+  return new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/Paris" }).format(new Date(iso));
 }
 function heure(iso) {
-  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }).format(new Date(iso));
 }
 
 export default function ReservationsPage() {
@@ -32,6 +32,8 @@ export default function ReservationsPage() {
   const [showModal, setShowModal] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(null); // booking à annuler
   const [cancelling, setCancelling] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null); // booking à supprimer
+  const [deleting, setDeleting] = useState(false);
 
   const charger = useCallback(() => {
     setLoading(true);
@@ -55,6 +57,12 @@ export default function ReservationsPage() {
     if (act === "cancel") {
       const b = bookings.find((x) => x.id === id);
       setConfirmCancel(b || { id });
+      return;
+    }
+    // La suppression passe par sa propre modale de confirmation
+    if (act === "delete") {
+      const b = bookings.find((x) => x.id === id);
+      setConfirmDelete(b || { id });
       return;
     }
     try {
@@ -83,6 +91,23 @@ export default function ReservationsPage() {
     } catch {
     } finally {
       setCancelling(false);
+    }
+  }
+
+  async function confirmerSuppression() {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/bookings/${confirmDelete.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setConfirmDelete(null);
+        charger();
+      }
+    } catch {
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -204,6 +229,11 @@ export default function ReservationsPage() {
                           </button>
                         </>
                       )}
+                      {/* Suppression définitive (disponible pour toutes les résas) */}
+                      <button className={`${styles.menuItem} ${styles.menuDanger}`} onClick={() => action(b.id, "delete")}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6" /></svg>
+                        Supprimer
+                      </button>
                     </div>
                   )}
                 </div>
@@ -254,6 +284,41 @@ export default function ReservationsPage() {
                 disabled={cancelling}
               >
                 {cancelling ? "Annulation…" : "Confirmer l'annulation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmation de suppression */}
+      {confirmDelete && (
+        <div className={styles.overlay} onClick={() => !deleting && setConfirmDelete(null)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.confirmIcon}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6" />
+              </svg>
+            </div>
+            <h3>Supprimer définitivement ?</h3>
+            <p>
+              {confirmDelete.clientName ? <><b>{confirmDelete.clientName}</b> — </> : ""}
+              {confirmDelete.startsAt ? `${jour(confirmDelete.startsAt)} à ${heure(confirmDelete.startsAt)}.` : ""}
+              {" "}La réservation sera effacée de la base. Le client n'est pas prévenu. Cette action est irréversible.
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.confirmCancel}
+                onClick={() => setConfirmDelete(null)}
+                disabled={deleting}
+              >
+                Retour
+              </button>
+              <button
+                className={styles.confirmDanger}
+                onClick={confirmerSuppression}
+                disabled={deleting}
+              >
+                {deleting ? "Suppression…" : "Supprimer définitivement"}
               </button>
             </div>
           </div>

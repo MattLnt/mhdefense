@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
-import { emailConfirmationReservation } from "@/lib/email-templates";
+import { formatDateHeure } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
@@ -29,13 +29,7 @@ async function notifierClientAnnulation(booking) {
     if (!email) return;
 
     const nom = booking.guestName || booking.user?.name || "";
-    const dateHeure = new Intl.DateTimeFormat("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(booking.startsAt));
+    const dateHeure = formatDateHeure(booking.startsAt);
 
     const formule = booking.isFreeTrial
       ? "Séance d'essai"
@@ -151,5 +145,32 @@ export async function PATCH(request, { params }) {
   } catch (error) {
     console.error("[api/admin/bookings PATCH]", error);
     return NextResponse.json({ error: "Erreur lors de l'action." }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/admin/bookings/[id]
+ * Supprime définitivement une réservation (Payment et Participant partent
+ * en cascade). Ne prévient pas le client — action de nettoyage admin.
+ */
+export async function DELETE(request, { params }) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "Accès refusé." }, { status: 403 });
+  }
+
+  try {
+    const { id } = await params;
+
+    const booking = await prisma.booking.findUnique({ where: { id } });
+    if (!booking) {
+      return NextResponse.json({ error: "Réservation introuvable." }, { status: 404 });
+    }
+
+    await prisma.booking.delete({ where: { id } });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[api/admin/bookings DELETE]", error);
+    return NextResponse.json({ error: "Erreur lors de la suppression." }, { status: 500 });
   }
 }
