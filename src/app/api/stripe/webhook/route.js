@@ -7,6 +7,7 @@ import {
   emailBienvenueAbonnement,
   emailNotificationAdmin,
 } from "@/lib/email-templates";
+import { formatDateHeure } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
@@ -72,13 +73,7 @@ async function envoyerConfirmationPonctuel(bookingId) {
     const nom = booking.guestName || booking.user?.name || "";
     const phone = booking.guestPhone || booking.user?.phone || "";
 
-    const dateHeure = new Intl.DateTimeFormat("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(booking.startsAt));
+    const dateHeure = formatDateHeure(booking.startsAt);
 
     const formule = LABEL_SESSION[booking.sessionType] || "Séance";
 
@@ -93,7 +88,6 @@ async function envoyerConfirmationPonctuel(bookingId) {
           formule,
           dateHeure,
           duree: "1 heure",
-          lieu: "Sarrians (84)",
           isEssai: false,
         }),
       });
